@@ -829,6 +829,13 @@ function openPanel(ticker){
     if(!d.scoreData)fetch(`/api/score/${ticker}`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(sc=>{if(sc.ok){cache[ticker].scoreData=sc;if(selectedTicker===ticker&&spTab==='overview')renderSPOverview();}}).catch(()=>{});
     if(!d.tfSignals)fetch(`/api/signal/${ticker}?ema=200`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(sig=>{if(sig.ok){cache[ticker].tfSignals=sig.signals;renderTable();if(selectedTicker===ticker)renderCurrentSPTab();}}).catch(()=>{});
     if(!d.fmp)fetch(`/api/fundamentals/${ticker}`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(f=>{if(f.ok){cache[ticker].fmp=f;if(selectedTicker===ticker)renderCurrentSPTab();}}).catch(()=>{});
+    // Pre-cargar opciones en background
+    if(!d.options){
+      fetch(`/api/options/${ticker}`,{headers:{Authorization:'Bearer '+token}})
+        .then(r=>r.json()).then(opt=>{
+          if(opt.ok){cache[ticker].options=opt;if(selectedTicker===ticker&&spTab==='options')renderSPOptions();}
+        }).catch(()=>{});
+    }
     if(pro()){
       if(!d.ia)fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker,stockData:d})}).then(r=>r.json()).then(ia=>{if(!ia.upgrade){cache[ticker].ia=ia;if(selectedTicker===ticker&&spTab==='drivers')renderSPDrivers();}}).catch(()=>{});
       if(!d.earnings)fetch(`/api/earnings/${ticker}`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(earn=>{if(earn.ok){cache[ticker].earnings=earn;if(selectedTicker===ticker&&(spTab==='earnings'||spTab==='news'))renderCurrentSPTab();}}).catch(()=>{});
@@ -845,7 +852,7 @@ function closePanel(){
 
 function setSPTab(tab){
   spTab=tab;
-  document.querySelectorAll('.sp-tab').forEach((t,i)=>{t.classList.toggle('active',['overview','chart','drivers','earnings','news'][i]===tab);});
+  document.querySelectorAll('.sp-tab').forEach((t,i)=>{t.classList.toggle('active',['overview','chart','options','drivers','earnings','news'][i]===tab);});
   renderCurrentSPTab();
 }
 
@@ -853,6 +860,7 @@ function renderCurrentSPTab(){
   if(!selectedTicker)return;
   if(spTab==='overview')renderSPOverview();
   else if(spTab==='chart')renderSPChart();
+  else if(spTab==='options')renderSPOptions();
   else if(spTab==='drivers')renderSPDrivers();
   else if(spTab==='earnings')renderSPEarnings();
   else if(spTab==='news')renderSPNews();
@@ -866,7 +874,12 @@ function renderSPOverview(){
   const{price,dropFromHigh,rsi14,trend,ema200,reboundProb5,reboundProb10,reboundProb15}=d;
   const pRel=dropFromHigh>=15?reboundProb15:dropFromHigh>=10?reboundProb10:reboundProb5;
   const sl=price*(1-p.slPct/100),tp1=price*(1+p.tp1Pct/100),tp2=price*(1+p.tp2Pct/100);
-  const realPe=fmp.pe||d.pe;const realEps=fmp.eps||d.eps;const realBeta=fmp.beta||d.beta;
+  // Usar FMP si disponible, sino Yahoo Finance
+  const realPe=fmp.pe||d.pe||null;
+  const realEps=fmp.eps||d.eps||null;
+  const realBeta=fmp.beta||d.beta||null;
+  const realMktCap=fmp.mktCap||d.mktCap||null;
+  const realDiv=fmp.dividendYield||d.divYield||null;
 
   let html=`
   <div class="sp-section">
@@ -894,10 +907,10 @@ function renderSPOverview(){
         ['P/E Trailing',realPe?n(realPe,1):'—',pc(realPe)],
         ['P/E Forward',fmp.fwdPe?n(fmp.fwdPe,1):'—',''],
         ['EPS (TTM)',realEps?'$'+n(realEps,2):'—',realEps>0?'fv-g':'fv-b'],
-        ['Market Cap',cap(fmp.mktCap||d.mktCap),''],
-        ['Dividendo',fmp.dividendYield?n(fmp.dividendYield,2)+'%':'0%',fmp.dividendYield>0?'fv-g':''],
+        ['Market Cap',cap(realMktCap),''],
+        ['Dividendo',realDiv?n(realDiv,2)+'%':'0%',realDiv>0?'fv-g':''],
         ['Div/Acción',fmp.dividendPerShare?'$'+n(fmp.dividendPerShare,2):'$0',''],
-        ['Beta',realBeta?n(realBeta,2):'—',realBeta<1?'fv-g':realBeta<1.5?'fv-w':'fv-b'],
+        ['Beta',realBeta?n(realBeta,2):'—',realBeta&&realBeta<1?'fv-g':realBeta&&realBeta<1.5?'fv-w':'fv-b'],
         ['Margen neto',fmp.margin?n(fmp.margin,1)+'%':'—',fmp.margin>20?'fv-g':fmp.margin>10?'fv-w':'fv-b'],
         ['Margen bruto',fmp.grossMargin?n(fmp.grossMargin,1)+'%':'—',''],
         ['ROE',fmp.roe?n(fmp.roe,1)+'%':'—',fmp.roe>20?'fv-g':fmp.roe>10?'fv-w':'fv-b'],
@@ -1070,6 +1083,106 @@ function renderSPEarnings(){
       <div class="hist-title">Últimos reportes</div>
       ${(earn.surprises||[]).slice(0,6).map(s=>{const beat=s.actualEarningResult>=s.estimatedEarning;return`<div class="hist-row"><span style="color:#bbb">${(s.date||'').split('T')[0]}</span><span>Real: <strong style="color:${beat?'#26a69a':'#ef5350'}">$${parseFloat(s.actualEarningResult||0).toFixed(2)}</strong></span><span style="color:#bbb">Est: $${parseFloat(s.estimatedEarning||0).toFixed(2)}</span><span class="beat-badge ${beat?'bb-yes':'bb-no'}">${beat?'BEAT':'MISS'}</span></div>`;}).join('')}
     </div>`:''}`;
+}
+
+// ── OPCIONES ──────────────────────────────────────────────
+async function renderSPOptions(){
+  const t=selectedTicker;
+  document.getElementById('spContent').innerHTML='<div style="padding:20px;text-align:center;color:#bbb;font-size:12px">📊 Cargando opciones...</div>';
+  try{
+    const r=await fetch(`/api/options/${t}`,{headers:{Authorization:'Bearer '+token}});
+    const d=await r.json();
+    if(!d.ok){
+      document.getElementById('spContent').innerHTML=`<div style="padding:20px;text-align:center;color:#bbb;font-size:12px">❌ ${d.error||'Sin opciones disponibles'}<br><br><span style="font-size:11px">Nota: SPY, ETFs y algunas acciones pequeñas no tienen opciones en Yahoo Finance</span></div>`;
+      return;
+    }
+    const sentColor=d.sentiment==='Alcista'?'#26a69a':d.sentiment==='Bajista'?'#ef5350':'#f57f17';
+    const html=`
+    <div class="sp-section">
+      <div class="sp-section-title">📊 Opciones — Vencimiento ${d.expDate}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:#f8f9fc;border-radius:5px;padding:8px;text-align:center">
+          <div style="font-size:11px;color:#999">Precio actual</div>
+          <div style="font-size:14px;font-weight:700">$${n(d.price,2)}</div>
+        </div>
+        <div style="background:#f8f9fc;border-radius:5px;padding:8px;text-align:center">
+          <div style="font-size:11px;color:#999">Max Pain</div>
+          <div style="font-size:14px;font-weight:700;color:#f57f17">$${n(d.maxPain,0)}</div>
+        </div>
+        <div style="background:#f8f9fc;border-radius:5px;padding:8px;text-align:center">
+          <div style="font-size:11px;color:#999">Put/Call</div>
+          <div style="font-size:14px;font-weight:700;color:${sentColor}">${d.cpRatio||'—'}</div>
+        </div>
+        <div style="background:#f8f9fc;border-radius:5px;padding:8px;text-align:center">
+          <div style="font-size:11px;color:#999">Sentimiento</div>
+          <div style="font-size:12px;font-weight:700;color:${sentColor}">${d.sentiment}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#999;margin-bottom:8px">
+        Total Calls OI: <strong style="color:#26a69a">${(d.totalCallOI||0).toLocaleString()}</strong> &nbsp;|&nbsp;
+        Total Puts OI: <strong style="color:#ef5350">${(d.totalPutOI||0).toLocaleString()}</strong>
+      </div>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title" style="color:#26a69a">📈 CALLS — Strikes más comprados (mayor Open Interest)</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse">
+        <tr style="color:#999;border-bottom:1px solid #f0f3f7">
+          <th style="text-align:left;padding:4px 0">Strike</th>
+          <th style="text-align:right">OI</th>
+          <th style="text-align:right">Volumen</th>
+          <th style="text-align:right">Precio</th>
+          <th style="text-align:right">IV%</th>
+          <th style="text-align:center">ITM</th>
+        </tr>
+        ${(d.calls||[]).map(c=>`<tr style="border-bottom:1px solid #f8f9fc;${c.strike===d.maxPain?'background:#fff8e1':''}">
+          <td style="padding:5px 0;font-weight:${c.inTheMoney?700:400};color:${c.inTheMoney?'#26a69a':'#1a1a2e'}">$${n(c.strike,0)}${c.strike===d.maxPain?' 🎯':''}</td>
+          <td style="text-align:right;font-weight:600;color:#26a69a">${(c.openInterest||0).toLocaleString()}</td>
+          <td style="text-align:right;color:#666">${(c.volume||0).toLocaleString()}</td>
+          <td style="text-align:right">$${n(c.lastPrice,2)}</td>
+          <td style="text-align:right;color:#888">${c.iv||'—'}%</td>
+          <td style="text-align:center">${c.inTheMoney?'✅':'—'}</td>
+        </tr>`).join('')}
+      </table>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-section-title" style="color:#ef5350">📉 PUTS — Strikes más vendidos (mayor Open Interest)</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse">
+        <tr style="color:#999;border-bottom:1px solid #f0f3f7">
+          <th style="text-align:left;padding:4px 0">Strike</th>
+          <th style="text-align:right">OI</th>
+          <th style="text-align:right">Volumen</th>
+          <th style="text-align:right">Precio</th>
+          <th style="text-align:right">IV%</th>
+          <th style="text-align:center">ITM</th>
+        </tr>
+        ${(d.puts||[]).map(p=>`<tr style="border-bottom:1px solid #f8f9fc;${p.strike===d.maxPain?'background:#fff8e1':''}">
+          <td style="padding:5px 0;font-weight:${p.inTheMoney?700:400};color:${p.inTheMoney?'#ef5350':'#1a1a2e'}">$${n(p.strike,0)}${p.strike===d.maxPain?' 🎯':''}</td>
+          <td style="text-align:right;font-weight:600;color:#ef5350">${(p.openInterest||0).toLocaleString()}</td>
+          <td style="text-align:right;color:#666">${(p.volume||0).toLocaleString()}</td>
+          <td style="text-align:right">$${n(p.lastPrice,2)}</td>
+          <td style="text-align:right;color:#888">${p.iv||'—'}%</td>
+          <td style="text-align:center">${p.inTheMoney?'✅':'—'}</td>
+        </tr>`).join('')}
+      </table>
+    </div>
+
+    <div class="sp-section">
+      <div style="font-size:11px;color:#bbb;line-height:1.6">
+        <strong>🎯 Max Pain $${n(d.maxPain,0)}</strong> — precio donde el mayor número de opciones expiran sin valor.<br>
+        <strong>Put/Call Ratio ${d.cpRatio}</strong> — ${d.cpRatio<0.7?'Ratio bajo = mercado alcista (más calls que puts)':d.cpRatio>1.3?'Ratio alto = mercado bajista (más puts que calls)':'Ratio neutral = mercado equilibrado'}.<br>
+        <strong>OI</strong> = Open Interest (contratos abiertos). <strong>ITM</strong> = In The Money (en el dinero).
+      </div>
+    </div>`;
+    document.getElementById('spContent').innerHTML=html;
+    // Aplicar dark mode si está activo
+    if(document.body.classList.contains('dark')){
+      document.querySelectorAll('#spContent [style*="background:#f8f9fc"]').forEach(el=>{el.style.background='#0d1117';});
+    }
+  }catch(e){
+    document.getElementById('spContent').innerHTML=`<div style="padding:20px;color:#ef5350;font-size:12px">Error: ${e.message}</div>`;
+  }
 }
 
 // ── NEWS ──────────────────────────────────────────────────
