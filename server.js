@@ -46,7 +46,7 @@ const dbRun  = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(e){
 // ── MIDDLEWARE ────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -425,4 +425,3 @@ app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
 });
-
