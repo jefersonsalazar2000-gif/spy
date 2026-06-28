@@ -9,11 +9,13 @@ const sqlite3    = require('sqlite3').verbose();
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET  || 'tradesmart-secret-2025';
-const STRIPE_KEY = process.env.STRIPE_KEY  || '';
-const EMAIL_USER = process.env.EMAIL_USER  || '';
-const EMAIL_PASS = process.env.EMAIL_PASS  || '';
-const PRICE_ID   = process.env.STRIPE_PRICE_ID || '';
+const JWT_SECRET     = process.env.JWT_SECRET        || 'tradesmart-secret-2025';
+const STRIPE_KEY     = process.env.STRIPE_KEY        || '';
+const EMAIL_USER     = process.env.EMAIL_USER        || '';
+const EMAIL_PASS     = process.env.EMAIL_PASS        || '';
+const PRICE_ID       = process.env.STRIPE_PRICE_ID   || '';
+const TG_TOKEN       = process.env.TELEGRAM_BOT_TOKEN || '';
+const TG_CHAT_ID     = process.env.TELEGRAM_CHAT_ID   || '';
 
 // ── DB SQLITE3 ────────────────────────────────────────────
 const db = new sqlite3.Database('./tradesmart.db');
@@ -304,6 +306,22 @@ app.post('/api/alerts/whatsapp', authMiddleware, async (req, res) => {
   res.json({ ok:true });
 });
 
+// ── TELEGRAM CONFIG ──────────────────────────────────────
+app.post('/api/alerts/telegram', authMiddleware, async (req, res) => {
+  const { chatId, enabled } = req.body;
+  await dbRun('UPDATE users SET telegram_chat_id = ?, telegram_enabled = ? WHERE id = ?',
+    [chatId||null, enabled?1:0, req.user.id]);
+  res.json({ ok: true });
+});
+
+app.post('/api/alerts/telegram/test', authMiddleware, async (req, res) => {
+  const user = await dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  if (!user.telegram_chat_id) return res.status(400).json({ error: 'Configura tu Chat ID primero' });
+  const sent = await sendTelegram(user.telegram_chat_id,
+    '✅ <b>TradeSmart AI</b>\n\nPrueba de alerta exitosa. Tus alertas de Telegram están activas. 🚀');
+  res.json({ ok: sent, message: sent ? 'Mensaje enviado a Telegram' : 'Error — verifica el Chat ID' });
+});
+
 app.post('/api/alerts/whatsapp/test', authMiddleware, async (req, res) => {
   const user = await dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
   if (!user.whatsapp_phone || !user.whatsapp_apikey) return res.status(400).json({ error: 'Configura tu número y API key primero' });
@@ -339,6 +357,21 @@ async function checkAlerts() {
   }
 }
 setInterval(checkAlerts, 60*60*1000);
+
+// ── TELEGRAM ─────────────────────────────────────────────
+async function sendTelegram(chatId, message) {
+  if (!TG_TOKEN || !chatId) return false;
+  try {
+    const url  = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
+    const resp = await fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+      timeout: 10000
+    });
+    return resp.ok;
+  } catch(e) { return false; }
+}
 
 // ── WHATSAPP ──────────────────────────────────────────────
 async function sendWhatsApp(phone, apikey, message) {
@@ -451,3 +484,4 @@ app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
 });
+
