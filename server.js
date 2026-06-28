@@ -185,7 +185,7 @@ app.get('/api/chart/:ticker', authMiddleware, async (req, res) => {
   const cfg = TF_MAP[tf] || TF_MAP['1d'];
   try {
     const url  = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${cfg.interval}&range=${cfg.range}`;
-    const resp = await fetch(url, { headers: {'User-Agent':'Mozilla/5.0'}, timeout: 12000 });
+    const resp = await fetch(url, { headers: {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36','Accept':'application/json'}, timeout: 20000 });
     const json = await resp.json();
     if (!json.chart?.result?.length) return res.status(404).json({ error:'Sin datos' });
     const r  = json.chart.result[0];
@@ -222,7 +222,7 @@ app.get('/api/signal/:ticker', authMiddleware, async (req, res) => {
     try {
       const cfg = TF_MAP[tf];
       const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${cfg.interval}&range=${cfg.range}`;
-      const resp= await fetch(url, { headers:{'User-Agent':'Mozilla/5.0'}, timeout:10000 });
+      const resp= await fetch(url, { headers:{'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}, timeout:15000 });
       const json= await resp.json();
       if (!json.chart?.result?.length) return;
       const closes = json.chart.result[0].indicators.quote[0].close.filter(v=>v!=null);
