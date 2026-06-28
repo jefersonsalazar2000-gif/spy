@@ -725,6 +725,98 @@ app.get('/api/score/:ticker', authMiddleware, async (req, res) => {
   }
 });
 
+// ── OPCIONES — Yahoo Finance ─────────────────────────────
+app.get('/api/options/:ticker', authMiddleware, async (req, res) => {
+  const { ticker } = req.params;
+  try {
+    // Obtener fechas de vencimiento disponibles
+    const url1 = `https://query1.finance.yahoo.com/v7/finance/options/${ticker}`;
+    const r1 = await fetch(url1, { headers:{'User-Agent':'Mozilla/5.0'}, timeout:10000 });
+    const j1 = await r1.json();
+
+    if (!j1.optionChain?.result?.length) {
+      return res.json({ ok:false, error:'Sin datos de opciones para '+ticker });
+    }
+
+    const result   = j1.optionChain.result[0];
+    const price    = result.quote?.regularMarketPrice || 0;
+    const expDates = result.expirationDates || [];
+
+    if (!expDates.length) return res.json({ ok:false, error:'Sin fechas de vencimiento' });
+
+    // Tomar la fecha más cercana
+    const nextExp = expDates[0];
+    const url2 = `https://query1.finance.yahoo.com/v7/finance/options/${ticker}?date=${nextExp}`;
+    const r2 = await fetch(url2, { headers:{'User-Agent':'Mozilla/5.0'}, timeout:10000 });
+    const j2 = await r2.json();
+
+    const chain   = j2.optionChain?.result?.[0];
+    if (!chain) return res.json({ ok:false, error:'Sin cadena de opciones' });
+
+    const calls = (chain.options?.[0]?.calls || [])
+      .filter(c => c.openInterest > 0)
+      .sort((a,b) => (b.openInterest||0) - (a.openInterest||0))
+      .slice(0,8)
+      .map(c => ({
+        strike:       c.strike,
+        openInterest: c.openInterest,
+        volume:       c.volume || 0,
+        iv:           c.impliedVolatility ? (c.impliedVolatility*100).toFixed(1) : null,
+        lastPrice:    c.lastPrice,
+        inTheMoney:   c.inTheMoney,
+      }));
+
+    const puts = (chain.options?.[0]?.puts || [])
+      .filter(p => p.openInterest > 0)
+      .sort((a,b) => (b.openInterest||0) - (a.openInterest||0))
+      .slice(0,8)
+      .map(p => ({
+        strike:       p.strike,
+        openInterest: p.openInterest,
+        volume:       p.volume || 0,
+        iv:           p.impliedVolatility ? (p.impliedVolatility*100).toFixed(1) : null,
+        lastPrice:    p.lastPrice,
+        inTheMoney:   p.inTheMoney,
+      }));
+
+    // Calcular Max Pain
+    const allStrikes = [...new Set([
+      ...calls.map(c=>c.strike),
+      ...puts.map(p=>p.strike)
+    ])].sort((a,b)=>a-b);
+
+    let maxPain = price;
+    let minPain = Infinity;
+    const allCalls = chain.options?.[0]?.calls || [];
+    const allPuts  = chain.options?.[0]?.puts  || [];
+
+    allStrikes.forEach(s => {
+      const callLoss = allCalls.reduce((sum,c) => sum + (c.openInterest||0) * Math.max(0, s - c.strike), 0);
+      const putLoss  = allPuts.reduce( (sum,p) => sum + (p.openInterest||0) * Math.max(0, p.strike - s), 0);
+      const total = callLoss + putLoss;
+      if (total < minPain) { minPain = total; maxPain = s; }
+    });
+
+    // Call/Put ratio
+    const totalCallOI = allCalls.reduce((s,c)=>s+(c.openInterest||0),0);
+    const totalPutOI  = allPuts.reduce( (s,p)=>s+(p.openInterest||0),0);
+    const cpRatio = totalCallOI > 0 ? (totalPutOI/totalCallOI).toFixed(2) : null;
+    const sentiment = cpRatio < 0.7 ? 'Alcista' : cpRatio > 1.3 ? 'Bajista' : 'Neutral';
+
+    res.json({
+      ok: true, ticker, price,
+      expDate: new Date(nextExp*1000).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}),
+      expDatesCount: expDates.length,
+      calls, puts,
+      maxPain,
+      totalCallOI, totalPutOI,
+      cpRatio, sentiment,
+    });
+  } catch(e) {
+    res.status(500).json({ ok:false, error: e.message });
+  }
+});
+
 // ── ADMIN — activar Pro (solo con clave secreta) ─────────
 app.get('/api/admin/makepro', async (req, res) => {
   const { email, secret } = req.query;
