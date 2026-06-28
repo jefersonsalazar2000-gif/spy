@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1146,7 +1145,6 @@ async function fetchAll(){
         try{const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(d.ok){cache[t].earnings=d;if(selectedTicker===t)renderCurrentSPTab();}}catch(e){}
       }));
       renderEarnings();
-      tickers.forEach(async t=>{
       tickers.forEach(async t=>{
         if(!cache[t]?.ok)return;
         try{const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});const d=await r.json();if(!d.upgrade){cache[t].ia=d;if(selectedTicker===t&&spTab==='drivers')renderSPDrivers();}}catch(e){}
