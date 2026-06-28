@@ -945,20 +945,48 @@ function renderDetail(ticker,d,p){
 
 // ── TOGGLE ROW ────────────────────────────────────────────
 function toggleRow(ticker){
-  if(expandedRows.has(ticker)){expandedRows.delete(ticker);}
-  else{expandedRows.add(ticker);}
-  renderTable();
-  // Cargar datos del detalle si se expande
   if(expandedRows.has(ticker)){
-    const d=cache[ticker];
-    if(d&&d.ok){
-      loadTFSignals(ticker,200);
-      loadEarningsAndScore(ticker);
-      if(isPro()){
-        loadDriversIA(ticker);
-      }
+    expandedRows.delete(ticker);
+    renderTable();
+    return;
+  }
+  expandedRows.add(ticker);
+  renderTable();
+  const d=cache[ticker];
+  if(!d||d.error||d.loading)return;
+  // Cargar score si no está
+  if(!d.scoreData){
+    fetch(`/api/score/${ticker}`,{headers:{Authorization:'Bearer '+token}})
+      .then(r=>r.json()).then(sc=>{
+        if(sc.ok){cache[ticker].score=sc.score;cache[ticker].scoreData=sc;renderTable();}
+      }).catch(()=>{});
+  }
+  // Cargar señales EMA si no están
+  if(!d.tfSignals){
+    fetch(`/api/signal/${ticker}?ema=200`,{headers:{Authorization:'Bearer '+token}})
+      .then(r=>r.json()).then(sig=>{
+        if(sig.ok){cache[ticker].tfSignals=sig.signals;renderTable();}
+      }).catch(()=>{});
+  }
+  if(isPro()){
+    // Drivers IA
+    if(!d.ia){
+      fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({ticker,stockData:cache[ticker]})})
+        .then(r=>r.json()).then(ia=>{
+          if(!ia.upgrade){cache[ticker].ia=ia;renderTable();}
+        }).catch(()=>{});
+    }
+    // Earnings
+    if(!d.earnings){
+      fetch(`/api/earnings/${ticker}`,{headers:{Authorization:'Bearer '+token}})
+        .then(r=>r.json()).then(earn=>{
+          if(earn.ok){cache[ticker].earnings=earn;renderTable();}
+        }).catch(()=>{});
     }
   }
+  // Gráfico — cargar después de que el DOM se renderice
+  setTimeout(()=>loadChartDetail(ticker,'1d',200), 200);
 }
 
 // ── EARNINGS TABLE ────────────────────────────────────────
@@ -1093,10 +1121,13 @@ async function loadDriversIA(ticker){
 
 async function addTicker(){
   const inp=document.getElementById('newTicker');
-  const t=inp.value.trim().toUpperCase();
+  const t=inp.value.trim().toUpperCase().replace(/[^A-Z0-9.]/g,'');
   if(!t||tickers.includes(t)){inp.value='';return;}
   const max=isPro()?50:5;
-  if(tickers.length>=max){if(!isPro())checkout();inp.value='';return;}
+  if(tickers.length>=max){
+    alert(lang==='es'?`Máximo ${max} acciones en tu plan. ${!isPro()?'Upgrade a Pro para más.':''}`:`Max ${max} stocks in your plan.`);
+    inp.value='';return;
+  }
   tickers.push(t);
   cache[t]={loading:true};
   inp.value='';
@@ -1293,5 +1324,3 @@ setInterval(()=>{if(userData&&!loading)fetchAll();},10*60*1000);
 </script>
 </body>
 </html>
-
-
