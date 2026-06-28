@@ -751,7 +751,24 @@ app.get('/api/admin/users', async (req, res) => {
   res.json({ ok: true, total: users.length, users });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
+  // Auto-crear usuario admin si no existe
+  try {
+    const existing = await dbGet('SELECT id FROM users WHERE email = ?', ['jefersonsalazar2000@gmail.com']);
+    if (!existing) {
+      const bcrypt = require('bcryptjs');
+      const hash = await bcrypt.hash('Jefer85admin!', 10);
+      await dbRun('INSERT INTO users (email, password, name, plan) VALUES (?, ?, ?, ?)',
+        ['jefersonsalazar2000@gmail.com', hash, 'Jeferson', 'pro']);
+      console.log('✅ Usuario admin creado automáticamente');
+    } else {
+      // Asegurar que siempre tenga plan Pro
+      await dbRun('UPDATE users SET plan = "pro" WHERE email = ?', ['jefersonsalazar2000@gmail.com']);
+      console.log('✅ Usuario admin verificado — Plan Pro activo');
+    }
+  } catch(e) {
+    console.log('Auto-create user error:', e.message);
+  }
 });
