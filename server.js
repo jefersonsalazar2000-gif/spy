@@ -47,34 +47,6 @@ const dbGet = (sql, p=[]) => new Promise((res,rej) => db.get(sql,p,(e,r)=>e?rej(
 const dbAll = (sql, p=[]) => new Promise((res,rej) => db.all(sql,p,(e,r)=>e?rej(e):res(r)));
 const dbRun = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(e){e?rej(e):res({lastID:this.lastID,changes:this.changes})}));
 
-  try {
-    // Crear tabla con TODAS las columnas desde el inicio — no necesita migraciones
-    await db.execute(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      name TEXT,
-      plan TEXT DEFAULT 'free',
-      stripe_customer_id TEXT,
-      stripe_subscription_id TEXT,
-      watchlist TEXT DEFAULT '["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","F"]',
-      alerts_enabled INTEGER DEFAULT 1,
-      drop_alert REAL DEFAULT 5.0,
-      whatsapp_phone TEXT,
-      whatsapp_apikey TEXT,
-      whatsapp_enabled INTEGER DEFAULT 0,
-      telegram_chat_id TEXT,
-      telegram_enabled INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      last_login TEXT
-    )`);
-    console.log('✅ Turso DB conectada y lista');
-  } catch(e) {
-    console.error('DB init error:', e.message);
-  }
-}
-initDB();
-
 // ── MIDDLEWARE ────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
