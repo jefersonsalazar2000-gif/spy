@@ -5,7 +5,7 @@ const path       = require('path');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const sqlite3    = require('sqlite3').verbose();
+const { createClient } = require('@libsql/client');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -19,10 +19,37 @@ const TG_CHAT_ID     = process.env.TELEGRAM_CHAT_ID   || '';
 const FMP_KEY        = process.env.FMP_API_KEY         || '';
 
 // ── DB SQLITE3 ────────────────────────────────────────────
-const db = new sqlite3.Database('./tradesmart.db');
+// ── TURSO DB ─────────────────────────────────────────────
+const db = createClient({
+  url:       process.env.TURSO_URL   || 'libsql://tradesmart-tradesmart.aws-us-east-1.turso.io',
+  authToken: process.env.TURSO_TOKEN || '',
+});
 
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS users (
+// Helper: adaptar API de Turso al mismo estilo que sqlite3
+const dbGet = async (sql, p=[]) => {
+  const r = await db.execute({sql, args: p});
+  if (!r.rows.length) return undefined;
+  const row = r.rows[0];
+  const obj = {};
+  r.columns.forEach((col,i) => obj[col] = row[i]);
+  return obj;
+};
+const dbAll = async (sql, p=[]) => {
+  const r = await db.execute({sql, args: p});
+  return r.rows.map(row => {
+    const obj = {};
+    r.columns.forEach((col,i) => obj[col] = row[i]);
+    return obj;
+  });
+};
+const dbRun = async (sql, p=[]) => {
+  const r = await db.execute({sql, args: p});
+  return { lastID: Number(r.lastInsertRowid), changes: r.rowsAffected };
+};
+
+// Inicializar tabla
+async function initDB() {
+  await db.execute(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
@@ -41,23 +68,19 @@ db.serialize(() => {
     created_at TEXT DEFAULT (datetime('now')),
     last_login TEXT
   )`);
-  // Migraciones — agregar columnas si no existen
-  const migrations = [
+  // Migraciones
+  for (const sql of [
     'ALTER TABLE users ADD COLUMN whatsapp_phone TEXT',
     'ALTER TABLE users ADD COLUMN whatsapp_apikey TEXT',
     'ALTER TABLE users ADD COLUMN whatsapp_enabled INTEGER DEFAULT 0',
     'ALTER TABLE users ADD COLUMN telegram_chat_id TEXT',
     'ALTER TABLE users ADD COLUMN telegram_enabled INTEGER DEFAULT 0',
-  ];
-  migrations.forEach(sql => {
-    db.run(sql, err => {}); // Ignorar error si ya existe
-  });
-});
-
-// Helper: promisify db queries
-const dbGet  = (sql, p=[]) => new Promise((res,rej) => db.get(sql,p,(e,r)=>e?rej(e):res(r)));
-const dbAll  = (sql, p=[]) => new Promise((res,rej) => db.all(sql,p,(e,r)=>e?rej(e):res(r)));
-const dbRun  = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(e){e?rej(e):res(this)}));
+  ]) {
+    try { await db.execute(sql); } catch(e) {}
+  }
+  console.log('✅ Turso DB conectada y lista');
+}
+initDB().catch(console.error);
 
 // ── MIDDLEWARE ────────────────────────────────────────────
 app.use(cors());
@@ -85,9 +108,10 @@ app.post('/api/auth/register', async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     const r = await dbRun('INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
       [email, hash, name || email.split('@')[0]]);
-    const token = jwt.sign({ id: r.lastID, email }, JWT_SECRET, { expiresIn: '30d' });
+    const newId = r.lastID;
+    const token = jwt.sign({ id: newId, email }, JWT_SECRET, { expiresIn: '30d' });
     sendWelcomeEmail(email, name || email.split('@')[0]);
-    res.json({ ok: true, token, user: { id: r.lastID, email, name, plan: 'free' } });
+    res.json({ ok: true, token, user: { id: newId, email, name, plan: 'free' } });
   } catch(e) {
     if (e.message?.includes('UNIQUE')) return res.status(400).json({ error: 'Email ya registrado' });
     res.status(500).json({ error: e.message });
