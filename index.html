@@ -963,80 +963,74 @@ function renderEarningsTable(){
 // ── FETCH ─────────────────────────────────────────────────
 async function fetchAll(){
   const btn=document.getElementById('refreshBtn');
-  if(loading){return;}
   loading=true;
   btn.disabled=true;btn.textContent='↻ Cargando...';
   document.getElementById('lastUpdate').textContent='Descargando datos reales...';
-  tickers.forEach(t=>{if(!cache[t])cache[t]={loading:true};});
+  tickers.forEach(t=>{cache[t]={...cache[t],loading:true};});
   renderTable();
 
-  // Yahoo Finance en paralelo
-  await Promise.all(tickers.map(async t=>{
-    try{
-      const r=await fetch(`/api/stock/${t}`,{headers:{Authorization:'Bearer '+token}});
-      const d=await r.json();
-      if(d.ok){cache[t]={...cache[t],...d};}
-      else{cache[t]={error:d.error};}
-    }catch(e){cache[t]={error:e.message};}
-  }));
-  renderTable();
-
-  // FMP Fundamentales
-  await Promise.all(tickers.map(async t=>{
-    if(!cache[t]||cache[t].error)return;
-    try{
-      const r=await fetch(`/api/fundamentals/${t}`,{headers:{Authorization:'Bearer '+token}});
-      const d=await r.json();
-      if(d.ok)cache[t].fmp=d;
-    }catch(e){}
-    renderTable();
-  }));
-
-  // Score + TF Signals en paralelo
-  await Promise.all(tickers.map(async t=>{
-    if(!cache[t]||cache[t].error)return;
-    try{
-      const [scoreResp,sigResp]=await Promise.all([
-        fetch(`/api/score/${t}`,{headers:{Authorization:'Bearer '+token}}),
-        fetch(`/api/signal/${t}?ema=200`,{headers:{Authorization:'Bearer '+token}}),
-      ]);
-      const sc=await scoreResp.json();
-      const sig=await sigResp.json();
-      if(sc.ok){cache[t].score=sc.score;cache[t].scoreData=sc;}
-      if(sig.ok)cache[t].tfSignals=sig.signals;
-    }catch(e){}
-    renderTable();
-  }));
-
-  // Earnings + Noticias (Pro only)
-  if(isPro()){
+  try {
+    // PASO 1: Yahoo Finance — datos principales
     await Promise.all(tickers.map(async t=>{
+      try{
+        const r=await fetch(`/api/stock/${t}`,{headers:{Authorization:'Bearer '+token}});
+        const d=await r.json();
+        cache[t]=d.ok?{...d,loading:false}:{error:d.error||'Error',loading:false};
+      }catch(e){cache[t]={error:e.message,loading:false};}
+    }));
+    renderTable();
+
+    // PASO 2: FMP Fundamentales (en background, no bloquea)
+    tickers.forEach(async t=>{
       if(!cache[t]||cache[t].error)return;
       try{
-        const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});
+        const r=await fetch(`/api/fundamentals/${t}`,{headers:{Authorization:'Bearer '+token}});
         const d=await r.json();
-        if(d.ok)cache[t].earnings=d;
+        if(d.ok){cache[t].fmp=d;renderTable();}
       }catch(e){}
-    }));
-    // Drivers IA
-    await Promise.all(tickers.map(async t=>{
+    });
+
+    // PASO 3: Score y Señales EMA (en background)
+    tickers.forEach(async t=>{
       if(!cache[t]||cache[t].error)return;
       try{
-        const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});
-        const d=await r.json();
-        if(!d.upgrade)cache[t].ia=d;
+        const [sc,sig]=await Promise.all([
+          fetch(`/api/score/${t}`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()),
+          fetch(`/api/signal/${t}?ema=200`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()),
+        ]);
+        if(sc.ok){cache[t].score=sc.score;cache[t].scoreData=sc;}
+        if(sig.ok)cache[t].tfSignals=sig.signals;
+        renderTable();
       }catch(e){}
-    }));
-    renderEarningsTable();
+    });
+
+    // PASO 4: Earnings + Drivers IA (Pro, en background)
+    if(isPro()){
+      tickers.forEach(async t=>{
+        if(!cache[t]||cache[t].error)return;
+        try{
+          const earn=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());
+          if(earn.ok){cache[t].earnings=earn;renderTable();}
+        }catch(e){}
+      });
+      tickers.forEach(async t=>{
+        if(!cache[t]||cache[t].error)return;
+        try{
+          const ia=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})}).then(r=>r.json());
+          if(!ia.upgrade){cache[t].ia=ia;renderTable();}
+        }catch(e){}
+      });
+    }
+
+  } catch(e) {
+    console.error('fetchAll error:', e);
+  } finally {
+    loading=false;
+    btn.disabled=false;
+    btn.textContent='↻ Actualizar';
+    document.getElementById('lastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-ES')+' · Yahoo + FMP + IA';
+    try{fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}
   }
-
-  // Guardar watchlist
-  try{await fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}
-
-  loading=false;
-  btn.disabled=false;btn.textContent='↻ Actualizar';
-  document.getElementById('lastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-ES')+' · Yahoo + FMP + IA';
-  renderTable();
 }
 
 async function loadTFSignals(ticker,ema){
