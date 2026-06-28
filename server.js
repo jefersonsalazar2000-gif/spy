@@ -248,45 +248,45 @@ app.get('/api/fundamentals/:ticker', authMiddleware, async (req, res) => {
   if (!FMP_KEY) return res.json({ ok: false, error: 'FMP no configurado' });
   try {
     // Obtener perfil y ratios en paralelo
-    const [profileResp, ratiosResp, metricsResp] = await Promise.all([
+    const [profileResp, ratiosResp, metricsResp, quoteResp] = await Promise.all([
       fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
       fetch(`https://financialmodelingprep.com/stable/ratios-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
       fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
+      fetch(`https://financialmodelingprep.com/stable/quote?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
     ]);
 
     const profileData  = await profileResp.json();
     const ratiosData   = await ratiosResp.json();
     const metricsData  = await metricsResp.json();
+    const quoteData    = await quoteResp.json();
 
     const p = Array.isArray(profileData)  ? profileData[0]  : profileData;
     const r = Array.isArray(ratiosData)   ? ratiosData[0]   : ratiosData;
     const m = Array.isArray(metricsData)  ? metricsData[0]  : metricsData;
+    const q = Array.isArray(quoteData)    ? quoteData[0]    : quoteData;
 
     if (!p) return res.json({ ok: false, error: 'Ticker no encontrado' });
 
     res.json({
       ok: true, ticker,
-      // Perfil
       companyName:  p.companyName,
       sector:       p.sector,
       industry:     p.industry,
-      description:  p.description,
-      mktCap:       p.mktCap,
+      mktCap:       p.mktCap || q?.marketCap,
       beta:         p.beta,
       divYield:     p.lastDiv ? (p.lastDiv / p.price * 100) : null,
       employees:    p.fullTimeEmployees,
-      // Ratios TTM
-      pe:           r?.peRatioTTM           || null,
-      fwdPe:        r?.priceEarningsRatioTTM|| null,
-      eps:          r?.epsTTM               || null,
-      pbRatio:      r?.pbRatioTTM           || null,
+      // PE y EPS del quote (mas confiable)
+      pe:           q?.pe           || r?.peRatioTTM    || null,
+      eps:          q?.eps          || null,
+      fwdPe:        r?.priceEarningsToGrowthRatioTTM || null,
+      pbRatio:      r?.pbRatioTTM   || null,
       debtEquity:   r?.debtEquityRatioTTM   || null,
       roe:          r?.returnOnEquityTTM     ? r.returnOnEquityTTM * 100 : null,
       roa:          r?.returnOnAssetsTTM     ? r.returnOnAssetsTTM * 100 : null,
       margin:       r?.netProfitMarginTTM    ? r.netProfitMarginTTM * 100 : null,
       grossMargin:  r?.grossProfitMarginTTM  ? r.grossProfitMarginTTM * 100 : null,
       currentRatio: r?.currentRatioTTM       || null,
-      // Key Metrics TTM
       revenue:      m?.revenuePerShareTTM    || null,
       evEbitda:     m?.evToEbitdaTTM         || null,
       fcf:          m?.freeCashFlowPerShareTTM || null,
@@ -576,4 +576,3 @@ app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
 });
-
