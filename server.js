@@ -49,38 +49,33 @@ const dbRun = async (sql, p=[]) => {
 
 // Inicializar tabla
 async function initDB() {
-  await db.execute(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT,
-    plan TEXT DEFAULT 'free',
-    stripe_customer_id TEXT,
-    stripe_subscription_id TEXT,
-    watchlist TEXT DEFAULT '["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","F"]',
-    alerts_enabled INTEGER DEFAULT 1,
-    drop_alert REAL DEFAULT 5.0,
-    whatsapp_phone TEXT,
-    whatsapp_apikey TEXT,
-    whatsapp_enabled INTEGER DEFAULT 0,
-    telegram_chat_id TEXT,
-    telegram_enabled INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT (datetime('now')),
-    last_login TEXT
-  )`);
-  // Migraciones
-  for (const sql of [
-    'ALTER TABLE users ADD COLUMN whatsapp_phone TEXT',
-    'ALTER TABLE users ADD COLUMN whatsapp_apikey TEXT',
-    'ALTER TABLE users ADD COLUMN whatsapp_enabled INTEGER DEFAULT 0',
-    'ALTER TABLE users ADD COLUMN telegram_chat_id TEXT',
-    'ALTER TABLE users ADD COLUMN telegram_enabled INTEGER DEFAULT 0',
-  ]) {
-    try { await db.execute(sql); } catch(e) {}
+  try {
+    // Crear tabla con TODAS las columnas desde el inicio — no necesita migraciones
+    await db.execute(`CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      name TEXT,
+      plan TEXT DEFAULT 'free',
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      watchlist TEXT DEFAULT '["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","F"]',
+      alerts_enabled INTEGER DEFAULT 1,
+      drop_alert REAL DEFAULT 5.0,
+      whatsapp_phone TEXT,
+      whatsapp_apikey TEXT,
+      whatsapp_enabled INTEGER DEFAULT 0,
+      telegram_chat_id TEXT,
+      telegram_enabled INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      last_login TEXT
+    )`);
+    console.log('✅ Turso DB conectada y lista');
+  } catch(e) {
+    console.error('DB init error:', e.message);
   }
-  console.log('✅ Turso DB conectada y lista');
 }
-initDB().catch(console.error);
+initDB();
 
 // ── MIDDLEWARE ────────────────────────────────────────────
 app.use(cors());
