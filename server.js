@@ -16,6 +16,7 @@ const EMAIL_PASS     = process.env.EMAIL_PASS        || '';
 const PRICE_ID       = process.env.STRIPE_PRICE_ID   || '';
 const TG_TOKEN       = process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT_ID     = process.env.TELEGRAM_CHAT_ID   || '';
+const FMP_KEY        = process.env.FMP_API_KEY         || '';
 
 // ── DB SQLITE3 ────────────────────────────────────────────
 const db = new sqlite3.Database('./tradesmart.db');
@@ -241,12 +242,88 @@ app.get('/api/signal/:ticker', authMiddleware, async (req, res) => {
   res.json({ ok:true, ticker, ema, signals: results });
 });
 
+// ── FUNDAMENTALES REALES — FMP ───────────────────────────
+app.get('/api/fundamentals/:ticker', authMiddleware, async (req, res) => {
+  const { ticker } = req.params;
+  if (!FMP_KEY) return res.json({ ok: false, error: 'FMP no configurado' });
+  try {
+    // Obtener perfil y ratios en paralelo
+    const [profileResp, ratiosResp, metricsResp] = await Promise.all([
+      fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
+      fetch(`https://financialmodelingprep.com/stable/ratios-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
+      fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
+    ]);
+
+    const profileData  = await profileResp.json();
+    const ratiosData   = await ratiosResp.json();
+    const metricsData  = await metricsResp.json();
+
+    const p = Array.isArray(profileData)  ? profileData[0]  : profileData;
+    const r = Array.isArray(ratiosData)   ? ratiosData[0]   : ratiosData;
+    const m = Array.isArray(metricsData)  ? metricsData[0]  : metricsData;
+
+    if (!p) return res.json({ ok: false, error: 'Ticker no encontrado' });
+
+    res.json({
+      ok: true, ticker,
+      // Perfil
+      companyName:  p.companyName,
+      sector:       p.sector,
+      industry:     p.industry,
+      description:  p.description,
+      mktCap:       p.mktCap,
+      beta:         p.beta,
+      divYield:     p.lastDiv ? (p.lastDiv / p.price * 100) : null,
+      employees:    p.fullTimeEmployees,
+      // Ratios TTM
+      pe:           r?.peRatioTTM           || null,
+      fwdPe:        r?.priceEarningsRatioTTM|| null,
+      eps:          r?.epsTTM               || null,
+      pbRatio:      r?.pbRatioTTM           || null,
+      debtEquity:   r?.debtEquityRatioTTM   || null,
+      roe:          r?.returnOnEquityTTM     ? r.returnOnEquityTTM * 100 : null,
+      roa:          r?.returnOnAssetsTTM     ? r.returnOnAssetsTTM * 100 : null,
+      margin:       r?.netProfitMarginTTM    ? r.netProfitMarginTTM * 100 : null,
+      grossMargin:  r?.grossProfitMarginTTM  ? r.grossProfitMarginTTM * 100 : null,
+      currentRatio: r?.currentRatioTTM       || null,
+      // Key Metrics TTM
+      revenue:      m?.revenuePerShareTTM    || null,
+      evEbitda:     m?.evToEbitdaTTM         || null,
+      fcf:          m?.freeCashFlowPerShareTTM || null,
+      dividendYield:m?.dividendYieldTTM      ? m.dividendYieldTTM * 100 : null,
+    });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ── DRIVERS IA — PRO ONLY ─────────────────────────────────
 app.post('/api/drivers', authMiddleware, proMiddleware, async (req, res) => {
   const { ticker, stockData } = req.body;
   try {
-    const prompt = `Eres analista financiero experto. Para ${ticker} (precio: $${stockData.price?.toFixed(2)}, caida: ${stockData.dropFromHigh?.toFixed(1)}%) responde SOLO JSON puro sin markdown:
-{"revenue":"400B","margin":25.0,"debtEquity":0.8,"roe":35.0,"drivers":[{"type":"bull","icon":"📈","text":"Driver alcista ESPECÍFICO de ${ticker}","strength":"Alto"},{"type":"bull","icon":"💰","text":"Segundo driver alcista de ${ticker}","strength":"Medio"},{"type":"bear","icon":"⚠️","text":"Riesgo bajista principal de ${ticker}","strength":"Alto"},{"type":"bear","icon":"📉","text":"Segundo riesgo de ${ticker}","strength":"Medio"},{"type":"neutral","icon":"⚖️","text":"Catalizador a vigilar en ${ticker}","strength":"Medio"}],"outlook":"COMPRA","outlookReason":"Razón específica en 1 frase para ${ticker}"}`;
+    const prompt = `Eres analista financiero experto con datos actualizados a junio 2025. Para la acción ${ticker} (precio actual: $${stockData.price?.toFixed(2)}, caida desde max: ${stockData.dropFromHigh?.toFixed(1)}%) responde SOLO JSON puro sin markdown ni texto extra:
+{
+  "pe": 28.5,
+  "fwdPe": 24.0,
+  "eps": 6.50,
+  "mktCap": 2500000000000,
+  "divYield": 0.5,
+  "beta": 1.2,
+  "revenue": "400B",
+  "margin": 25.0,
+  "debtEquity": 0.8,
+  "roe": 35.0,
+  "drivers": [
+    {"type":"bull","icon":"📈","text":"Driver alcista MUY ESPECÍFICO y actual de ${ticker}","strength":"Alto"},
+    {"type":"bull","icon":"💰","text":"Segundo driver alcista específico de ${ticker}","strength":"Medio"},
+    {"type":"bear","icon":"⚠️","text":"Riesgo bajista principal actual de ${ticker}","strength":"Alto"},
+    {"type":"bear","icon":"📉","text":"Segundo riesgo específico de ${ticker}","strength":"Medio"},
+    {"type":"neutral","icon":"⚖️","text":"Catalizador clave a vigilar en ${ticker}","strength":"Medio"}
+  ],
+  "outlook": "COMPRA",
+  "outlookReason": "Razón específica en 1 frase para ${ticker} con precio actual"
+}
+Usa datos REALES y ACTUALES de ${ticker}. Todos los valores numéricos deben ser reales.`;
     const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization': 'Bearer '+(process.env.GROQ_API_KEY||'')},
