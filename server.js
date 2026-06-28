@@ -116,9 +116,11 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 // ── WATCHLIST ─────────────────────────────────────────────
 app.post('/api/watchlist', authMiddleware, async (req, res) => {
   const { tickers } = req.body;
+  if (!tickers || !Array.isArray(tickers)) return res.status(400).json({ error: 'Tickers inválidos' });
   const user = await dbGet('SELECT plan FROM users WHERE id = ?', [req.user.id]);
-  const max  = user?.plan === 'pro' ? 50 : 5;
-  if (tickers.length > max) return res.status(403).json({ error: `Máximo ${max} acciones en plan ${user.plan}`, upgrade: true });
+  const plan = user?.plan || 'free';
+  const max  = plan === 'pro' ? 50 : 5;
+  if (tickers.length > max) return res.status(403).json({ error: `Máximo ${max} acciones en plan ${plan}`, upgrade: true });
   await dbRun('UPDATE users SET watchlist = ? WHERE id = ?', [JSON.stringify(tickers), req.user.id]);
   res.json({ ok: true });
 });
@@ -497,3 +499,4 @@ app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
 });
+
