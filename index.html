@@ -2,322 +2,268 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TradeSmart AI — Analiza como un institucional</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TradeSmart AI — Análisis Profesional de Acciones</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
-:root{--accent:#ffd700;--green:#00e676;--red:#f44336;--blue:#90caf9;--bg1:#0d1117;--bg2:#161b22;--border:#1e2d40}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f5f7fa;color:#1a1a2e;font-size:14px}
 
 /* NAV */
-.nav{background:linear-gradient(135deg,#0d1b2a,#1a237e);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e3a5f;position:sticky;top:0;z-index:100}
-.nav-logo{font-size:18px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:8px}
-.nav-right{display:flex;align-items:center;gap:10px}
-.lang-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px}
-.lang-btn:hover{background:rgba(255,255,255,0.2)}
-.nav-btn{border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
-.btn-login{background:transparent;color:#90caf9;border:1px solid #1e3a5f}
-.btn-login:hover{background:#1e3a5f}
-.btn-register{background:var(--accent);color:#000}
-.btn-register:hover{background:#ffec4d}
-.btn-pro{background:linear-gradient(135deg,#ffd700,#ff9800);color:#000;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700}
-.user-info{font-size:12px;color:#90caf9;display:flex;align-items:center;gap:8px}
-.plan-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700}
-.plan-free{background:rgba(100,100,100,0.3);color:#888}
-.plan-pro{background:linear-gradient(135deg,#ffd700,#ff9800);color:#000}
+.nav{background:#fff;border-bottom:1px solid #e0e4eb;padding:0 24px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.nav-logo{font-size:18px;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:8px;margin-right:24px;text-decoration:none}
+.nav-logo span{color:#e84142}
+.nav-tabs{display:flex;gap:0;flex:1}
+.nav-tab{padding:0 16px;height:52px;display:flex;align-items:center;font-size:13px;color:#666;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-tab:hover{color:#1a1a2e}
+.nav-tab.active{color:#e84142;border-bottom-color:#e84142;font-weight:500}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.lang-btn{background:none;border:1px solid #e0e4eb;color:#666;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.lang-btn:hover{border-color:#999;color:#1a1a2e}
+.user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:#666}
+.plan-pill{padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
+.pill-free{background:#f0f0f0;color:#666}
+.pill-pro{background:#ff6b35;color:#fff}
+.btn-upgrade{background:#e84142;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-upgrade:hover{background:#c73333}
+.btn-login{background:none;border:1px solid #e84142;color:#e84142;padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500}
+.btn-login:hover{background:#fff5f5}
+.btn-register{background:#e84142;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-logout{background:none;border:1px solid #e0e4eb;color:#666;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px}
 
-/* HERO */
-.hero{text-align:center;padding:60px 24px 40px;background:linear-gradient(180deg,#0d1b2a,#0a0a0f)}
-.hero h1{font-size:42px;font-weight:800;color:var(--accent);margin-bottom:12px}
-.hero p{font-size:16px;color:#90caf9;max-width:600px;margin:0 auto 24px}
-.hero-stats{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-top:20px}
-.hstat{text-align:center}
-.hstat-val{font-size:28px;font-weight:800;color:var(--accent)}
-.hstat-lbl{font-size:12px;color:#555;margin-top:2px}
+/* TICKER BAR */
+.ticker-bar{background:#1a1a2e;padding:0 24px;display:flex;gap:24px;overflow-x:auto;scrollbar-width:none}
+.ticker-bar::-webkit-scrollbar{display:none}
+.ticker-item{display:flex;align-items:center;gap:6px;padding:6px 0;white-space:nowrap;font-size:12px;color:#ccc;flex-shrink:0}
+.ticker-name{color:#fff;font-weight:500}
+.ticker-up{color:#26a69a}.ticker-down{color:#ef5350}
 
-/* PLANES */
-.plans-section{padding:40px 24px;max-width:900px;margin:0 auto}
-.plans-title{text-align:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:8px}
-.plans-sub{text-align:center;font-size:14px;color:#555;margin-bottom:30px}
-.plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:0 auto}
-.plan-card{background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:28px 24px}
-.plan-card.featured{border-color:var(--accent);box-shadow:0 0 30px rgba(255,215,0,0.15)}
-.plan-name{font-size:18px;font-weight:700;margin-bottom:4px}
-.plan-price{font-size:36px;font-weight:800;color:var(--accent);margin:12px 0 4px}
-.plan-price span{font-size:14px;color:#555;font-weight:400}
-.plan-desc{font-size:13px;color:#666;margin-bottom:20px}
-.plan-features{list-style:none;margin-bottom:24px}
-.plan-features li{font-size:13px;padding:5px 0;display:flex;align-items:center;gap:8px;color:#ccc}
-.plan-features li.ok::before{content:"✓";color:var(--green);font-weight:700}
-.plan-features li.no::before{content:"✗";color:#555;font-weight:700}
-.plan-features li.no{color:#555}
-.plan-btn{width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:700;transition:all .15s}
-.plan-btn-free{background:var(--bg2);color:#e0e0e0;border:1px solid var(--border)}
-.plan-btn-free:hover{background:#1e2d40}
-.plan-btn-pro{background:linear-gradient(135deg,#ffd700,#ff9800);color:#000}
-.plan-btn-pro:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,215,0,0.3)}
+/* CONTROLES */
+.controls-bar{background:#fff;border-bottom:1px solid #e0e4eb;padding:10px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-group label{font-size:12px;color:#888;white-space:nowrap}
+.ctrl-input{border:1px solid #e0e4eb;background:#fff;color:#1a1a2e;padding:5px 8px;border-radius:4px;font-size:12px;width:65px}
+.ctrl-input:focus{outline:none;border-color:#e84142}
+.add-ticker-wrap{display:flex;gap:6px;flex:1;min-width:200px}
+.add-ticker-input{border:1px solid #e0e4eb;background:#fff;color:#1a1a2e;padding:5px 10px;border-radius:4px;font-size:13px;flex:1;text-transform:uppercase}
+.add-ticker-input::placeholder{text-transform:none;color:#bbb}
+.btn-add{background:#1a1a2e;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500}
+.btn-refresh{background:#e84142;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500}
+.btn-refresh:disabled{background:#e0e4eb;color:#999;cursor:not-allowed}
 
-/* CONTROLS */
-.controls{padding:14px 24px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.ctrl{display:flex;align-items:center;gap:7px}
-.ctrl label{font-size:11px;color:var(--blue);white-space:nowrap}
-.ctrl input[type=number]{background:var(--bg2);border:1px solid #30363d;color:#e0e0e0;padding:5px 8px;border-radius:6px;font-size:12px;width:70px}
-.add-row{display:flex;gap:8px;flex:1;min-width:240px}
-.add-row input{background:var(--bg2);border:1px solid #30363d;color:#e0e0e0;padding:6px 12px;border-radius:6px;font-size:13px;flex:1;text-transform:uppercase}
-.add-row input::placeholder{text-transform:none;color:#444}
-.btn{border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;white-space:nowrap}
-.btn-blue{background:#1a237e;color:#fff}.btn-blue:hover{background:#283593}
-.btn-green{background:#1b5e20;color:#fff}.btn-green:hover{background:#2e7d32}
-.btn-green:disabled{background:#111;color:#333;cursor:not-allowed}
+/* SUMMARY BAR */
+.summary-bar{background:#fff;border-bottom:1px solid #e0e4eb;padding:8px 24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.sum-item{display:flex;align-items:center;gap:6px;font-size:12px}
+.sum-dot{width:10px;height:10px;border-radius:50%}
+.sum-label{color:#888}
+.sum-val{font-weight:600;color:#1a1a2e}
+.sum-update{margin-left:auto;font-size:11px;color:#bbb}
 
-/* SUMMARY */
-.summary{padding:12px 24px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;align-items:center}
-.sitem{text-align:center}.sval{font-size:20px;font-weight:700}.slbl{font-size:10px;color:#555;margin-top:1px}
-.sup{font-size:11px;color:#444;margin-left:auto}
+/* TABLA PRINCIPAL */
+.table-wrap{padding:16px 24px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+thead{background:#f8f9fc;border-bottom:2px solid #e0e4eb}
+th{padding:10px 12px;text-align:left;font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#1a1a2e}
+th.right{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid #f0f3f7;font-size:13px;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.td-right{text-align:right}
+.td-center{text-align:center}
 
-/* GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;padding:20px 24px}
+/* CELDA NOMBRE */
+.stock-cell{display:flex;align-items:center;gap:8px}
+.stock-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.stock-name{font-weight:600;color:#1a1a2e;font-size:13px}
+.stock-sector{font-size:11px;color:#bbb}
 
-/* CARD */
-.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s;position:relative}
-.card:hover{transform:translateY(-2px)}
-.card.ideal{border-color:var(--green);box-shadow:0 0 20px rgba(0,230,118,.12)}
-.card.strong{border-color:var(--accent);box-shadow:0 0 20px rgba(255,215,0,.12)}
-.card.watch{border-color:#ff9800}
-.remove-btn{position:absolute;top:10px;right:10px;background:rgba(127,0,0,.7);border:none;color:var(--red);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;opacity:0;transition:opacity .15s;z-index:2}
-.card:hover .remove-btn{opacity:1}
-.ch{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.logo{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
-.sname{font-size:15px;font-weight:600}.sticker{font-size:11px;color:var(--blue)}
-.sbadge{margin-left:auto;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0}
-.b-ideal{background:rgba(0,230,118,.15);color:var(--green);border:1px solid var(--green)}
-.b-strong{background:rgba(255,215,0,.15);color:var(--accent);border:1px solid var(--accent)}
-.b-watch{background:rgba(255,152,0,.15);color:#ff9800;border:1px solid #ff9800}
-.b-wait{background:rgba(80,80,80,.15);color:#666;border:1px solid #333}
-.b-load{background:rgba(30,30,30,.5);color:#444;border:1px solid #222}
-.cb{padding:12px 16px}
-.prow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
-.price-big{font-size:26px;font-weight:700}.drop-pct{font-size:16px;font-weight:700}
-.chg-row{font-size:11px;color:#555;margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap}
-.pbar{background:#111;border-radius:4px;height:7px;overflow:hidden;margin-bottom:4px}
-.pbar-fill{height:100%;border-radius:4px;transition:width .5s}
-.pbar-lbl{display:flex;justify-content:space-between;font-size:10px;color:#444;margin-bottom:10px}
+/* SEÑAL BADGE */
+.signal-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:600;white-space:nowrap}
+.sig-ideal{background:#e8f5e9;color:#2e7d32}
+.sig-strong{background:#fff8e1;color:#f57f17}
+.sig-watch{background:#fff3e0;color:#e65100}
+.sig-wait{background:#f5f5f5;color:#9e9e9e}
 
-/* DRIVERS */
-.drivers-box{background:#0a0d14;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px}
-.drivers-title{font-size:11px;font-weight:600;margin-bottom:8px}
-.driver-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
-.driver-txt{font-size:12px;line-height:1.5;color:#ccc;flex:1}
-.driver-badge{font-size:10px;padding:2px 6px;border-radius:3px;flex-shrink:0}
-.db-bull{background:rgba(0,230,118,.15);color:var(--green)}
-.db-bear{background:rgba(244,67,54,.15);color:var(--red)}
-.db-neutral{background:rgba(100,100,100,.15);color:#888}
-.outlook-row{font-size:11px;color:var(--blue);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+/* SCORE BADGE */
+.score-badge{display:inline-block;padding:3px 8px;border-radius:3px;font-size:12px;font-weight:700}
+.score-hi{background:#e8f5e9;color:#2e7d32}
+.score-mid{background:#fff8e1;color:#f57f17}
+.score-low{background:#fff3e0;color:#e65100}
+.score-none{background:#f5f5f5;color:#9e9e9e}
+
+/* CAMBIO % */
+.chg-up{color:#26a69a;font-weight:500}
+.chg-dn{color:#ef5350;font-weight:500}
+.chg-neutral{color:#888}
+
+/* EMA PILLS */
+.ema-pills{display:flex;gap:3px}
+.ema-pill{padding:2px 5px;border-radius:3px;font-size:10px;font-weight:600}
+.ema-up{background:#e8f5e9;color:#2e7d32}
+.ema-dn{background:#ffebee;color:#c62828}
+.ema-na{background:#f5f5f5;color:#bbb}
+.ema-cross-gold{background:#fff8e1;color:#f57f17}
+.ema-cross-death{background:#ffebee;color:#c62828}
+
+/* BARRA CAIDA */
+.drop-bar-wrap{display:flex;align-items:center;gap:6px;min-width:100px}
+.drop-bar-track{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.drop-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.drop-val{font-size:12px;font-weight:600;min-width:38px;text-align:right}
+.drop-ideal{color:#26a69a}.drop-strong{color:#f57f17}.drop-watch{color:#e65100}.drop-normal{color:#bbb}
+
+/* PROB REBOTE */
+.prob-wrap{display:flex;align-items:center;gap:4px}
+.prob-val{font-size:13px;font-weight:600}
+
+/* DETALLE ROW */
+.detail-row td{padding:0;background:#fafbff;border-bottom:1px solid #e0e4eb}
+.detail-panel{padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.detail-section{background:#fff;border:1px solid #e0e4eb;border-radius:6px;padding:12px 14px}
+.detail-section-title{font-size:11px;font-weight:600;color:#888;letter-spacing:0.05em;margin-bottom:10px;text-transform:uppercase}
+.fund-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+.fund-row:last-child{border-bottom:none}
+.fund-key{color:#888}
+.fund-val{font-weight:500;color:#1a1a2e}
+.fv-good{color:#26a69a}.fv-warn{color:#f57f17}.fv-bad{color:#ef5350}
+.driver-item{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+.driver-item:last-child{border-bottom:none}
+.driver-txt{flex:1;color:#444;line-height:1.4}
+.d-bull{color:#26a69a}.d-bear{color:#ef5350}.d-neutral{color:#888}
+.driver-strength{font-size:10px;padding:1px 5px;border-radius:2px;flex-shrink:0}
+.ds-alto-bull{background:#e8f5e9;color:#2e7d32}
+.ds-alto-bear{background:#ffebee;color:#c62828}
+.ds-medio{background:#f5f5f5;color:#666}
+
+/* EARNINGS */
+.earnings-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+.earnings-item:last-child{border-bottom:none}
+.beat-badge{padding:1px 5px;border-radius:2px;font-size:10px;font-weight:600}
+.beat-yes{background:#e8f5e9;color:#2e7d32}
+.beat-no{background:#ffebee;color:#c62828}
+.news-item-row{padding:6px 0;border-bottom:1px solid #f5f5f5}
+.news-item-row:last-child{border-bottom:none}
+.news-title{font-size:12px;color:#1a1a2e;line-height:1.4;text-decoration:none}
+.news-title:hover{color:#e84142}
+.news-meta{font-size:10px;color:#bbb;margin-top:2px;display:flex;gap:8px}
+.news-pos{color:#26a69a}.news-neg{color:#ef5350}.news-neu{color:#888}
 
 /* PRO LOCK */
-.pro-lock{background:#0a0d14;border:1px solid var(--accent);border-radius:8px;padding:14px;margin-bottom:10px;text-align:center}
-.pro-lock-icon{font-size:24px;margin-bottom:6px}
-.pro-lock-txt{font-size:12px;color:#90caf9;margin-bottom:10px}
-.pro-lock-btn{background:linear-gradient(135deg,#ffd700,#ff9800);color:#000;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700}
+.pro-lock{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff8e1;border:1px solid #ffe082;border-radius:4px;font-size:12px}
+.pro-lock-btn{background:#e84142;color:#fff;border:none;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap}
 
-/* PROB */
-.prob-box{background:#0d1b2a;border-radius:8px;padding:10px 12px;margin-bottom:10px}
-.prob-title{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:7px}
-.prob-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.prob-lbl{font-size:11px;color:#666;width:110px;flex-shrink:0}
-.prob-track{flex:1;background:#111;border-radius:3px;height:9px;overflow:hidden}
-.prob-fill{height:100%;border-radius:3px;transition:width .6s}
-.prob-pct{font-size:12px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
-
-/* LEVELS */
-.levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
-.lev{background:#111;border-radius:6px;padding:8px 10px;text-align:center}
-.lev-lbl{font-size:10px;color:#555;margin-bottom:3px}.lev-val{font-size:13px;font-weight:600}
-
-/* FUND */
-.fund-section{border-top:1px solid var(--border);padding-top:10px}
-.fund-title{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:8px}
-.fund-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.fund-item{background:#111;border-radius:5px;padding:6px 9px;display:flex;justify-content:space-between}
-.fund-key{font-size:10px;color:#555}.fund-val{font-size:11px;font-weight:600}
-
-/* FILTERS */
-.filters{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
-.fc{font-size:10px;padding:3px 8px;border-radius:4px}
-.fc-ok{background:rgba(0,230,118,.1);color:var(--green)}
-.fc-bad{background:rgba(244,67,54,.1);color:var(--red)}
-.srow{display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:8px}
-.st{text-align:center}.stv{font-size:14px;font-weight:600}.stl{font-size:10px;color:#444}
+/* SCORE PANEL */
+.score-panel{background:#f8f9fc;border:1px solid #e0e4eb;border-radius:4px;padding:10px 12px}
+.score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.score-big{font-size:28px;font-weight:800}
+.score-rec{font-size:12px;font-weight:600}
+.factor-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px}
+.factor-icon{font-size:11px;flex-shrink:0}
+.factor-lbl{flex:1;color:#555}
+.factor-pts{font-size:11px;font-weight:600}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:#0d1117;border:1px solid #1e2d40;border-radius:16px;padding:32px;width:100%;max-width:420px}
-.modal h2{font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px}
-.modal p{font-size:13px;color:#666;margin-bottom:24px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:12px;color:var(--blue);margin-bottom:6px}
-.form-group input{width:100%;background:#161b22;border:1px solid #30363d;color:#e0e0e0;padding:10px 14px;border-radius:8px;font-size:14px}
-.form-group input:focus{outline:none;border-color:var(--accent)}
-.modal-btn{width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:700;background:var(--accent);color:#000;margin-top:8px}
-.modal-btn:hover{background:#ffec4d}
-.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#666;font-size:20px;cursor:pointer}
-.modal-switch{text-align:center;margin-top:16px;font-size:13px;color:#666}
-.modal-switch a{color:var(--blue);cursor:pointer;text-decoration:underline}
-.modal-error{background:rgba(244,67,54,.1);border:1px solid var(--red);color:var(--red);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:12px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:8px;padding:28px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.modal h2{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.modal p{font-size:13px;color:#888;margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:500}
+.form-group input{width:100%;border:1px solid #e0e4eb;padding:9px 12px;border-radius:4px;font-size:13px;color:#1a1a2e}
+.form-group input:focus{outline:none;border-color:#e84142}
+.modal-btn{width:100%;padding:10px;border-radius:4px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:#e84142;color:#fff;margin-top:4px}
+.modal-btn:hover{background:#c73333}
+.modal-error{background:#fff5f5;border:1px solid #ffcdd2;color:#c62828;padding:8px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:#888}
+.modal-switch{text-align:center;margin-top:14px;font-size:12px;color:#888}
+.modal-switch a{color:#e84142;cursor:pointer}
 .modal{position:relative}
 
 /* ALERTS PANEL */
-.alerts-panel{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px;margin:0 24px 20px;max-width:500px}
-.alerts-title{font-size:14px;font-weight:600;color:var(--accent);margin-bottom:12px}
-.alerts-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.alerts-row label{font-size:12px;color:#90caf9}
-.alerts-row input[type=number]{background:var(--bg2);border:1px solid #30363d;color:#e0e0e0;padding:5px 8px;border-radius:6px;font-size:12px;width:70px}
-.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.alerts-panel{background:#fff;border:1px solid #e0e4eb;border-radius:6px;padding:16px;margin:0 24px 16px;max-width:700px}
+.alerts-panel-title{font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+.alert-section{margin-bottom:12px}
+.alert-section-title{font-size:11px;font-weight:600;color:#888;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px}
+.alert-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.alert-row label{font-size:12px;color:#555}
+.alert-input{border:1px solid #e0e4eb;padding:5px 8px;border-radius:4px;font-size:12px;width:70px}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:#333;border-radius:24px;cursor:pointer;transition:.3s}
-.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-.toggle input:checked+.toggle-slider{background:var(--green)}
-.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+.toggle-slider{position:absolute;inset:0;background:#ddd;border-radius:20px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:#26a69a}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px)}
+.wa-instructions{background:#f0faf8;border:1px solid #b2dfdb;border-radius:4px;padding:10px 12px;font-size:11px;color:#555;line-height:1.8;margin-bottom:8px}
+.tg-instructions{background:#e8f4fd;border:1px solid #b3d4f5;border-radius:4px;padding:10px 12px;font-size:11px;color:#555;line-height:1.8;margin-bottom:8px}
+.alert-field{border:1px solid #e0e4eb;padding:6px 10px;border-radius:4px;font-size:12px;flex:1;min-width:120px}
+.btn-save-alert{background:#1a1a2e;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:500}
+.btn-test-alert{background:#f5f5f5;color:#444;border:1px solid #e0e4eb;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px}
+.alert-status{font-size:11px;color:#888;margin-top:4px}
 
+/* LOADING */
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.sk{background:linear-gradient(90deg,#111 25%,#1e2d40 50%,#111 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px}
-.footer{text-align:center;padding:20px;font-size:11px;color:#333;border-top:1px solid var(--border)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;display:inline-block;margin-right:5px}
+.sk{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:3px;display:inline-block}
 
-/* ── RESPONSIVE ─────────────────────────────── */
-/* Tablet */
-@media(max-width:900px){
-  .hero h1{font-size:28px}
-  .plans-grid{grid-template-columns:1fr;max-width:400px}
-  .grid{grid-template-columns:1fr 1fr;padding:14px}
-  .controls{padding:10px 14px;gap:8px}
-  .summary{padding:10px 14px;gap:12px}
-  .alerts-panel{margin:0 14px 16px}
-}
-/* Mobile */
-@media(max-width:600px){
-  .nav{padding:10px 14px;gap:8px}
-  .nav-logo{font-size:15px}
-  .nav-right{gap:6px}
-  .nav-btn{padding:5px 10px;font-size:11px}
-  .lang-btn{padding:4px 8px;font-size:11px}
-  .hero{padding:32px 16px 24px}
-  .hero h1{font-size:22px}
-  .hero p{font-size:13px}
-  .hero-stats{gap:20px}
-  .hstat-val{font-size:22px}
-  .plans-section{padding:24px 16px}
-  .plans-grid{grid-template-columns:1fr;max-width:100%}
-  .plan-card{padding:20px 16px}
-  .controls{padding:10px 14px;gap:8px}
-  .ctrl{flex-wrap:nowrap}
-  .ctrl label{font-size:10px}
-  .ctrl input[type=number]{width:55px;font-size:11px;padding:4px 6px}
-  .add-row{min-width:100%;order:10}
-  .add-row input{font-size:12px}
-  .summary{padding:10px 14px;gap:10px}
-  .sval{font-size:16px}
-  .slbl{font-size:9px}
-  .grid{grid-template-columns:1fr;padding:10px 14px;gap:12px}
-  .card .cb{padding:10px 12px}
-  .price-big{font-size:22px}
-  .drop-pct{font-size:14px}
-  .levels{gap:4px}
-  .lev{padding:6px 6px}
-  .lev-val{font-size:12px}
-  .fund-grid{grid-template-columns:1fr 1fr}
-  .signals-grid{grid-template-columns:1fr 1fr 1fr}
-  .chart-controls{gap:4px}
-  .tf-btn{padding:3px 7px;font-size:10px}
-  .ema-input{width:48px;font-size:10px}
-  .alerts-panel{margin:0 14px 12px;padding:14px}
-  .modal{padding:24px 16px;margin:10px}
-  .prob-lbl{width:90px;font-size:10px}
-  .driver-txt{font-size:11px}
-  .chg-row{flex-direction:column;gap:2px}
-  .srow{gap:6px}
-  .stv{font-size:12px}
-  .stl{font-size:9px}
-  .sbadge{font-size:10px;padding:3px 7px}
-  .sname{font-size:13px}
-  .ch{padding:10px 12px 8px}
-  .logo{width:32px;height:32px;font-size:14px}
-  /* WhatsApp panel mobile */
-  .alerts-row{flex-wrap:wrap;gap:6px}
-}
-/* Extra small */
-@media(max-width:380px){
-  .nav-logo{font-size:13px}
-  .hero h1{font-size:19px}
-  .grid{padding:8px 10px}
-  .controls{padding:8px 10px}
-  .summary{padding:8px 10px}
-  .signals-grid{grid-template-columns:1fr 1fr 1fr;gap:4px}
-  .signal-tf-name{font-size:9px}
-  .signal-tf-txt{font-size:9px}
-}
+/* LANDING */
+.landing{max-width:900px;margin:60px auto;padding:0 24px;text-align:center}
+.landing h1{font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:12px}
+.landing h1 span{color:#e84142}
+.landing p{font-size:16px;color:#666;margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto}
+.landing-btns{display:flex;gap:12px;justify-content:center;margin-bottom:48px;flex-wrap:wrap}
+.btn-primary{background:#e84142;color:#fff;border:none;padding:12px 28px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:600}
+.btn-secondary{background:#fff;color:#1a1a2e;border:2px solid #e0e4eb;padding:11px 28px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:500}
+.stats-row{display:flex;justify-content:center;gap:40px;margin-bottom:48px;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-num{font-size:28px;font-weight:800;color:#e84142}
+.stat-lbl{font-size:12px;color:#888;margin-top:2px}
+.plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:600px;margin:0 auto;text-align:left}
+.plan-card{background:#fff;border:1px solid #e0e4eb;border-radius:8px;padding:24px}
+.plan-card.featured{border-color:#e84142;box-shadow:0 0 0 2px #e84142}
+.plan-name{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:4px}
+.plan-price{font-size:32px;font-weight:800;color:#1a1a2e;margin:8px 0 4px}
+.plan-price span{font-size:14px;color:#888;font-weight:400}
+.plan-desc{font-size:12px;color:#888;margin-bottom:16px}
+.plan-features{list-style:none;margin-bottom:20px}
+.plan-features li{font-size:12px;padding:4px 0;display:flex;align-items:center;gap:6px;color:#555}
+.plan-features li.ok::before{content:"✓";color:#26a69a;font-weight:700}
+.plan-features li.no::before{content:"✗";color:#ddd;font-weight:700}
+.plan-features li.no{color:#bbb}
+.plan-btn{width:100%;padding:10px;border-radius:5px;border:none;cursor:pointer;font-size:13px;font-weight:600}
+.plan-btn-free{background:#f5f5f5;color:#555}
+.plan-btn-pro{background:#e84142;color:#fff}
 
-/* Touch improvements */
-@media(hover:none){
-  .remove-btn{opacity:0.7}
-  .tf-btn{min-height:32px}
-  .plan-btn{min-height:44px}
-  .modal-btn{min-height:44px}
-  .btn{min-height:36px}
-  .toggle{width:48px;height:26px}
-  .toggle-slider:before{width:20px;height:20px}
-  .toggle input:checked+.toggle-slider:before{transform:translateX(22px)}
-}
+/* FOOTER */
+.footer{text-align:center;padding:16px;font-size:11px;color:#bbb;border-top:1px solid #e0e4eb;background:#fff}
 
-/* Safe area iPhone X+ */
+/* RESPONSIVE */
+@media(max-width:768px){
+  .table-wrap{padding:10px}
+  .controls-bar{padding:10px}
+  .summary-bar{padding:8px 10px;gap:12px}
+  .detail-panel{grid-template-columns:1fr}
+  .plans-grid{grid-template-columns:1fr}
+  .landing{margin:30px auto}
+  .landing h1{font-size:24px}
+  th,td{padding:8px 8px;font-size:12px}
+  .nav-tabs{display:none}
+  .alerts-panel{margin:0 10px 12px}
+}
 @supports(padding:max(0px)){
-  .nav{padding-top:max(14px,env(safe-area-inset-top))}
-  .footer{padding-bottom:max(16px,env(safe-area-inset-bottom))}
-  .grid{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+  .nav{padding-top:max(0px,env(safe-area-inset-top))}
 }
-
-/* CHART */
-.chart-section{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
-.chart-controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.tf-btn{border:1px solid var(--border);background:var(--bg2);color:#666;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
-.tf-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
-.tf-btn:hover{border-color:#555;color:#e0e0e0}
-.ema-input{background:var(--bg2);border:1px solid var(--border);color:#e0e0e0;padding:3px 8px;border-radius:4px;font-size:11px;width:55px}
-.chart-container{border-radius:8px;overflow:hidden;background:#0d1117}
-.chart-loading{text-align:center;padding:40px;color:#444;font-size:12px}
-
-/* SEÑALES MULTI-TF */
-.signals-section{background:#0a0d14;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px}
-.signals-title{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:8px}
-.signals-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.signal-tf{background:#111;border-radius:6px;padding:8px 10px;text-align:center;border:1px solid transparent}
-.signal-tf.bull{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05)}
-.signal-tf.strong_bull{border-color:var(--green);background:rgba(0,230,118,.1)}
-.signal-tf.bear{border-color:rgba(244,67,54,.3);background:rgba(244,67,54,.05)}
-.signal-tf.strong_bear{border-color:var(--red);background:rgba(244,67,54,.1)}
-.signal-tf.neutral{border-color:var(--border)}
-.signal-tf-name{font-size:10px;color:#555;margin-bottom:4px}
-.signal-tf-icon{font-size:18px;margin-bottom:2px}
-.signal-tf-txt{font-size:10px;font-weight:600}
-.signal-tf-diff{font-size:10px;color:#555;margin-top:2px}
-.signal-tf-cross{font-size:9px;padding:2px 5px;border-radius:3px;margin-top:3px;display:inline-block}
-.cross-golden{background:rgba(0,230,118,.2);color:var(--green)}
-.cross-death{background:rgba(244,67,54,.2);color:var(--red)}
 </style>
-<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
 <!-- MODAL AUTH -->
 <div class="modal-overlay" id="authModal" style="display:none">
-  <div class="modal" style="max-height:90vh;overflow-y:auto">
+  <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h2 id="modalTitle">Iniciar Sesión</h2>
     <p id="modalSub">Accede a tu dashboard de TradeSmart AI</p>
     <div id="modalError" class="modal-error" style="display:none"></div>
     <div class="form-group" id="nameGroup" style="display:none">
-      <label data-es="Nombre" data-en="Name">Nombre</label>
+      <label>Nombre</label>
       <input type="text" id="authName" placeholder="Tu nombre">
     </div>
     <div class="form-group">
@@ -325,7 +271,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <input type="email" id="authEmail" placeholder="tu@email.com">
     </div>
     <div class="form-group">
-      <label data-es="Contraseña" data-en="Password">Contraseña</label>
+      <label>Contraseña</label>
       <input type="password" id="authPassword" placeholder="••••••••">
     </div>
     <button class="modal-btn" onclick="submitAuth()" id="authBtn">Entrar</button>
@@ -338,596 +284,804 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-logo">📊 TradeSmart AI</div>
+  <a class="nav-logo" href="#">Trade<span>Smart</span> AI</a>
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" onclick="setTab('dashboard')">Dashboard</div>
+    <div class="nav-tab" onclick="setTab('alerts')">Alertas</div>
+    <div class="nav-tab" onclick="setTab('earnings')">Earnings</div>
+  </div>
   <div class="nav-right">
-    <button class="lang-btn" onclick="toggleLang()">🌐</button>
+    <button class="lang-btn" onclick="toggleLang()">🌐 ES/EN</button>
     <div id="navGuest" style="display:flex;gap:6px">
-      <button class="nav-btn btn-login" onclick="openModal('login')" data-es="Entrar" data-en="Login">Entrar</button>
-      <button class="nav-btn btn-register" onclick="openModal('register')" data-es="Gratis" data-en="Free">Gratis</button>
+      <button class="btn-login" onclick="openModal('login')">Entrar</button>
+      <button class="btn-register" onclick="openModal('register')">Gratis</button>
     </div>
     <div id="navUser" style="display:none">
-      <div class="user-info" style="flex-wrap:wrap;justify-content:flex-end">
-        <span id="userEmail" style="display:none" class="hide-mobile"></span>
-        <span class="plan-badge" id="planBadge">FREE</span>
-        <button class="btn-pro" id="upgradeBtn" onclick="checkout()" style="display:none" data-es="⭐ Pro $9.99" data-en="⭐ Pro $9.99">⭐ Pro $9.99</button>
-        <button class="nav-btn btn-login" onclick="logout()" data-es="Salir" data-en="Out">Salir</button>
+      <div class="user-chip">
+        <span id="userEmailChip" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <span class="plan-pill" id="planPill">FREE</span>
+        <button class="btn-upgrade" id="upgradeBtn" onclick="checkout()" style="display:none">⭐ Pro $9.99</button>
+        <button class="btn-logout" onclick="logout()">Salir</button>
       </div>
     </div>
   </div>
 </nav>
 
-<!-- HERO (solo si no está logueado) -->
-<div id="heroSection">
-  <div class="hero">
-    <h1 data-es="Analiza como un institucional" data-en="Analyze like an institutional">Analiza como un institucional</h1>
-    <p data-es="Las 7 Magnificas + cualquier acción. Datos reales, drivers IA, probabilidad de rebote." data-en="The Magnificent 7 + any stock. Real data, AI drivers, rebound probability.">Las 7 Magnificas + cualquier acción. Datos reales, drivers IA, probabilidad de rebote.</p>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 16px">
-      <button class="nav-btn btn-register" style="padding:12px 24px;font-size:14px;border-radius:8px;flex:1;max-width:220px" onclick="openModal('register')" data-es="Empezar Gratis" data-en="Start Free">Empezar Gratis</button>
-      <button class="nav-btn btn-login" style="padding:12px 24px;font-size:14px;border-radius:8px;border:1px solid #1e3a5f;flex:1;max-width:220px" onclick="openModal('login')" data-es="Ya tengo cuenta" data-en="I have an account">Ya tengo cuenta</button>
-    </div>
-    <div class="hero-stats">
-      <div class="hstat"><div class="hstat-val">9+</div><div class="hstat-lbl" data-es="Acciones monitoreadas" data-en="Stocks monitored">Acciones monitoreadas</div></div>
-      <div class="hstat"><div class="hstat-val">100%</div><div class="hstat-lbl" data-es="Datos reales Yahoo Finance" data-en="Real Yahoo Finance data">Datos reales Yahoo Finance</div></div>
-      <div class="hstat"><div class="hstat-val">$9.99</div><div class="hstat-lbl" data-es="Plan Pro / mes" data-en="Pro Plan / month">Plan Pro / mes</div></div>
-    </div>
-  </div>
+<!-- TICKER BAR -->
+<div class="ticker-bar" id="tickerBar"></div>
 
-  <!-- PLANES -->
-  <div class="plans-section">
-    <h2 class="plans-title" data-es="Elige tu plan" data-en="Choose your plan">Elige tu plan</h2>
-    <p class="plans-sub" data-es="Empieza gratis, actualiza cuando quieras" data-en="Start free, upgrade anytime">Empieza gratis, actualiza cuando quieras</p>
+<!-- LANDING (no logueado) -->
+<div id="landingSection">
+  <div class="landing">
+    <h1>Analiza como un <span>institucional</span></h1>
+    <p>Las 7 Magnificas + cualquier acción. Datos reales, drivers IA, probabilidad de rebote histórica, earnings y noticias.</p>
+    <div class="landing-btns">
+      <button class="btn-primary" onclick="openModal('register')">Empezar Gratis</button>
+      <button class="btn-secondary" onclick="openModal('login')">Ya tengo cuenta</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-num">9+</div><div class="stat-lbl">Acciones monitoreadas</div></div>
+      <div class="stat-item"><div class="stat-num">100%</div><div class="stat-lbl">Datos reales FMP + Yahoo</div></div>
+      <div class="stat-item"><div class="stat-num">$9.99</div><div class="stat-lbl">Plan Pro / mes</div></div>
+    </div>
     <div class="plans-grid">
       <div class="plan-card">
-        <div class="plan-name" data-es="Plan Gratuito" data-en="Free Plan">Plan Gratuito</div>
-        <div class="plan-price">$0<span data-es="/siempre" data-en="/forever">/siempre</span></div>
-        <div class="plan-desc" data-es="Para empezar a explorar" data-en="To start exploring">Para empezar a explorar</div>
+        <div class="plan-name">Plan Gratuito</div>
+        <div class="plan-price">$0<span>/siempre</span></div>
+        <div class="plan-desc">Para empezar a explorar</div>
         <ul class="plan-features">
-          <li class="ok" data-es="5 acciones en watchlist" data-en="5 stocks in watchlist">5 acciones en watchlist</li>
-          <li class="ok" data-es="Datos reales Yahoo Finance" data-en="Real Yahoo Finance data">Datos reales Yahoo Finance</li>
-          <li class="ok" data-es="Probabilidad de rebote" data-en="Rebound probability">Probabilidad de rebote</li>
-          <li class="ok" data-es="Fundamentales básicos" data-en="Basic fundamentals">Fundamentales básicos</li>
-          <li class="no" data-es="Drivers IA (Pro)" data-en="AI Drivers (Pro)">Drivers IA (Pro)</li>
-          <li class="no" data-es="Alertas por email (Pro)" data-en="Email alerts (Pro)">Alertas por email (Pro)</li>
-          <li class="no" data-es="50 acciones en watchlist (Pro)" data-en="50 stocks watchlist (Pro)">50 acciones watchlist (Pro)</li>
+          <li class="ok">5 acciones en watchlist</li>
+          <li class="ok">Datos reales Yahoo Finance</li>
+          <li class="ok">Probabilidad de rebote</li>
+          <li class="ok">Score de entrada</li>
+          <li class="no">Drivers IA (Pro)</li>
+          <li class="no">Earnings & Noticias (Pro)</li>
+          <li class="no">Alertas WhatsApp/Telegram (Pro)</li>
         </ul>
-        <button class="plan-btn plan-btn-free" onclick="openModal('register')" data-es="Empezar Gratis" data-en="Start Free">Empezar Gratis</button>
+        <button class="plan-btn plan-btn-free" onclick="openModal('register')">Empezar Gratis</button>
       </div>
       <div class="plan-card featured">
-        <div class="plan-name" style="color:var(--accent)" data-es="⭐ Plan Pro" data-en="⭐ Pro Plan">⭐ Plan Pro</div>
+        <div class="plan-name">⭐ Plan Pro</div>
         <div class="plan-price">$9.99<span>/mes</span></div>
-        <div class="plan-desc" data-es="Para traders serios" data-en="For serious traders">Para traders serios</div>
+        <div class="plan-desc">Para traders serios</div>
         <ul class="plan-features">
-          <li class="ok" data-es="50 acciones en watchlist" data-en="50 stocks in watchlist">50 acciones en watchlist</li>
-          <li class="ok" data-es="Datos reales Yahoo Finance" data-en="Real Yahoo Finance data">Datos reales Yahoo Finance</li>
-          <li class="ok" data-es="Probabilidad de rebote" data-en="Rebound probability">Probabilidad de rebote</li>
-          <li class="ok" data-es="Fundamentales completos" data-en="Complete fundamentals">Fundamentales completos</li>
-          <li class="ok" data-es="✨ Drivers IA por acción" data-en="✨ AI Drivers per stock">✨ Drivers IA por acción</li>
-          <li class="ok" data-es="🔔 Alertas por email" data-en="🔔 Email alerts">🔔 Alertas por email</li>
-          <li class="ok" data-es="Soporte prioritario" data-en="Priority support">Soporte prioritario</li>
+          <li class="ok">50 acciones en watchlist</li>
+          <li class="ok">Datos reales Yahoo + FMP</li>
+          <li class="ok">Probabilidad de rebote</li>
+          <li class="ok">Score de entrada</li>
+          <li class="ok">✨ Drivers IA por acción</li>
+          <li class="ok">📅 Earnings & Noticias</li>
+          <li class="ok">🔔 Alertas WhatsApp/Telegram</li>
         </ul>
-        <button class="plan-btn plan-btn-pro" onclick="openModal('register')" data-es="Empezar con Pro" data-en="Start with Pro">Empezar con Pro</button>
+        <button class="plan-btn plan-btn-pro" onclick="openModal('register')">Empezar con Pro</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DASHBOARD (solo si está logueado) -->
+<!-- DASHBOARD (logueado) -->
 <div id="dashboardSection" style="display:none">
-  <div class="controls">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
-      <div class="ctrl"><label data-es="Caida min" data-en="Min drop">Caida min</label><input type="number" id="dropMin" value="5" min="1" max="30" step="0.5" onchange="renderAll()"><label>%</label></div>
-      <div class="ctrl"><label data-es="Caida max" data-en="Max drop">Caida max</label><input type="number" id="dropMax" value="10" min="1" max="50" step="0.5" onchange="renderAll()"><label>%</label></div>
-      <div class="ctrl"><label>SL</label><input type="number" id="slPct" value="7" min="1" max="20" step="0.5" onchange="renderAll()"><label>%</label></div>
-      <div class="ctrl"><label>TP1</label><input type="number" id="tp1Pct" value="10" min="1" max="50" step="1" onchange="renderAll()"><label>%</label></div>
-      <div class="ctrl"><label>TP2</label><input type="number" id="tp2Pct" value="20" min="5" max="100" step="1" onchange="renderAll()"><label>%</label></div>
-    </div>
-    <div class="add-row">
-      <input type="text" id="newTicker" placeholder="NFLX, AMD, DIS..." maxlength="10" onkeypress="if(event.key==='Enter')addTicker()">
-      <button class="btn btn-blue" onclick="addTicker()" data-es="+" data-en="+">+</button>
-      <button class="btn btn-green" id="refreshBtn" onclick="fetchAll()" data-es="↻" data-en="↻">↻</button>
-    </div>
-  </div>
 
-  <!-- ALERTAS CONFIG (Pro) -->
-  <div id="alertsPanel" class="alerts-panel" style="display:none">
-    <div class="alerts-title">🔔 <span data-es="Configurar Alertas" data-en="Configure Alerts">Configurar Alertas</span></div>
-
-    <!-- Caida threshold -->
-    <div class="alerts-row">
-      <label class="toggle"><input type="checkbox" id="alertsEnabled" checked onchange="saveAlerts()"><span class="toggle-slider"></span></label>
-      <label data-es="Alertas activas" data-en="Alerts active">Alertas activas</label>
-      <label data-es="Alertar cuando caida ≥" data-en="Alert when drop ≥">Alertar cuando caida ≥</label>
-      <input type="number" id="alertDrop" value="5" min="1" max="30" step="0.5" onchange="saveAlerts()">
-      <label>%</label>
+  <!-- TAB: DASHBOARD -->
+  <div id="tabDashboard">
+    <div class="controls-bar">
+      <div class="ctrl-group"><label>Caída min</label><input class="ctrl-input" type="number" id="dropMin" value="5" min="1" max="30" step="0.5" onchange="renderTable()"><label>%</label></div>
+      <div class="ctrl-group"><label>Caída max</label><input class="ctrl-input" type="number" id="dropMax" value="10" min="1" max="50" step="0.5" onchange="renderTable()"><label>%</label></div>
+      <div class="ctrl-group"><label>SL</label><input class="ctrl-input" type="number" id="slPct" value="7" min="1" max="20" step="0.5" onchange="renderTable()"><label>%</label></div>
+      <div class="ctrl-group"><label>TP1</label><input class="ctrl-input" type="number" id="tp1Pct" value="10" min="1" max="50" step="1" onchange="renderTable()"><label>%</label></div>
+      <div class="ctrl-group"><label>TP2</label><input class="ctrl-input" type="number" id="tp2Pct" value="20" min="5" max="100" step="1" onchange="renderTable()"><label>%</label></div>
+      <div class="add-ticker-wrap">
+        <input class="add-ticker-input" type="text" id="newTicker" placeholder="Agregar: NFLX, AMD..." maxlength="10" onkeypress="if(event.key==='Enter')addTicker()">
+        <button class="btn-add" onclick="addTicker()">+ Agregar</button>
+        <button class="btn-refresh" id="refreshBtn" onclick="fetchAll()">↻ Actualizar</button>
+      </div>
     </div>
 
-    <!-- Separador -->
-    <div style="border-top:1px solid #1e2d40;margin:12px 0"></div>
-
-    <!-- WhatsApp Config -->
-    <div style="margin-bottom:10px">
-      <div style="font-size:12px;font-weight:600;color:#25D366;margin-bottom:8px">
-        📱 <span data-es="Alertas por WhatsApp (gratis via CallMeBot)" data-en="WhatsApp Alerts (free via CallMeBot)">Alertas por WhatsApp (gratis via CallMeBot)</span>
-      </div>
-
-      <!-- Instrucciones -->
-      <div style="background:#0a1a0a;border:1px solid #1a3a1a;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#90caf9;line-height:1.7">
-        <strong data-es="Cómo activar (1 minuto):" data-en="How to activate (1 minute):">Cómo activar (1 minuto):</strong><br>
-        <span data-es="1. Guarda este contacto en tu WhatsApp: +34 644 60 16 21 (CallMeBot)" data-en="1. Save this contact in WhatsApp: +34 644 60 16 21 (CallMeBot)">1. Guarda este contacto en tu WhatsApp: <strong>+34 644 60 16 21</strong> (CallMeBot)</span><br>
-        <span data-es="2. Envíale este mensaje: 'I allow callmebot to send me messages'" data-en="2. Send this message: 'I allow callmebot to send me messages'">2. Envíale: <strong>I allow callmebot to send me messages</strong></span><br>
-        <span data-es="3. Recibirás tu API key por WhatsApp" data-en="3. You'll receive your API key via WhatsApp">3. Recibirás tu <strong>API key</strong> por WhatsApp</span><br>
-        <span data-es="4. Pega tu número y API key abajo" data-en="4. Paste your number and API key below">4. Pega tu número y API key abajo</span>
-      </div>
-
-      <div class="alerts-row" style="flex-wrap:wrap;gap:8px">
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
-          <label style="font-size:10px;color:#555" data-es="Tu número WhatsApp (con código país)" data-en="Your WhatsApp number (with country code)">Número (ej: 15551234567)</label>
-          <input type="text" id="waPhone" placeholder="15551234567" style="background:#161b22;border:1px solid #30363d;color:#e0e0e0;padding:6px 10px;border-radius:6px;font-size:12px;width:100%">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
-          <label style="font-size:10px;color:#555" data-es="API Key de CallMeBot" data-en="CallMeBot API Key">API Key de CallMeBot</label>
-          <input type="text" id="waApiKey" placeholder="1234567" style="background:#161b22;border:1px solid #30363d;color:#e0e0e0;padding:6px 10px;border-radius:6px;font-size:12px;width:100%">
-        </div>
-      </div>
-
-      <div class="alerts-row" style="margin-top:8px">
-        <label class="toggle"><input type="checkbox" id="waEnabled" onchange="saveWhatsApp()"><span class="toggle-slider"></span></label>
-        <label style="font-size:12px;color:#25D366" data-es="Activar alertas WhatsApp" data-en="Enable WhatsApp alerts">Activar alertas WhatsApp</label>
-        <button onclick="saveWhatsApp()" style="background:#1a3a1a;border:1px solid #25D366;color:#25D366;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600" data-es="💾 Guardar" data-en="💾 Save">💾 Guardar</button>
-        <button onclick="testWhatsApp()" style="background:#0a1a0a;border:1px solid #25D366;color:#25D366;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px" data-es="📱 Probar" data-en="📱 Test">📱 Probar</button>
-      </div>
-      <div id="waStatus" style="font-size:11px;color:#555;margin-top:6px"></div>
+    <div class="summary-bar">
+      <div class="sum-item"><div class="sum-dot" style="background:#26a69a"></div><span class="sum-label">Compra ideal:</span><span class="sum-val" id="s-ideal">0</span></div>
+      <div class="sum-item"><div class="sum-dot" style="background:#f57f17"></div><span class="sum-label">Caída fuerte:</span><span class="sum-val" id="s-strong">0</span></div>
+      <div class="sum-item"><div class="sum-dot" style="background:#e65100"></div><span class="sum-label">Vigilar:</span><span class="sum-val" id="s-watch">0</span></div>
+      <div class="sum-item"><div class="sum-dot" style="background:#bbb"></div><span class="sum-label">Esperar:</span><span class="sum-val" id="s-wait">0</span></div>
+      <div class="sum-update" id="lastUpdate">Cargando...</div>
     </div>
 
-    <!-- Separador -->
-    <div style="border-top:1px solid #1e2d40;margin:12px 0"></div>
-
-    <!-- Telegram Config -->
-    <div style="margin-bottom:10px">
-      <div style="font-size:12px;font-weight:600;color:#29b6f6;margin-bottom:8px">
-        ✈️ <span data-es="Alertas por Telegram (gratis)" data-en="Telegram Alerts (free)">Alertas por Telegram (gratis)</span>
-      </div>
-
-      <div style="background:#0a1520;border:1px solid #1a3a50;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#90caf9;line-height:1.7">
-        <strong data-es="Cómo activar:" data-en="How to activate:">Cómo activar:</strong><br>
-        <span data-es="1. Abre Telegram y busca @jefersmart_bot" data-en="1. Open Telegram and find @jefersmart_bot">1. Abre Telegram y busca <strong>@jefersmart_bot</strong></span><br>
-        <span data-es="2. Escribe /start" data-en="2. Type /start">2. Escribe <strong>/start</strong></span><br>
-        <span data-es="3. Pega tu Chat ID abajo" data-en="3. Paste your Chat ID below">3. Pega tu <strong>Chat ID</strong> abajo</span>
-      </div>
-
-      <div class="alerts-row" style="flex-wrap:wrap;gap:8px">
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
-          <label style="font-size:10px;color:#555" data-es="Tu Chat ID de Telegram" data-en="Your Telegram Chat ID">Tu Chat ID de Telegram</label>
-          <input type="text" id="tgChatId" placeholder="1674153389" style="background:#161b22;border:1px solid #30363d;color:#e0e0e0;padding:6px 10px;border-radius:6px;font-size:12px;width:100%">
-        </div>
-      </div>
-
-      <div class="alerts-row" style="margin-top:8px">
-        <label class="toggle"><input type="checkbox" id="tgEnabled" onchange="saveTelegram()"><span class="toggle-slider"></span></label>
-        <label style="font-size:12px;color:#29b6f6" data-es="Activar alertas Telegram" data-en="Enable Telegram alerts">Activar alertas Telegram</label>
-        <button onclick="saveTelegram()" style="background:#0a2030;border:1px solid #29b6f6;color:#29b6f6;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600" data-es="💾 Guardar" data-en="💾 Save">💾 Guardar</button>
-        <button onclick="testTelegram()" style="background:#051015;border:1px solid #29b6f6;color:#29b6f6;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px" data-es="✈️ Probar" data-en="✈️ Test">✈️ Probar</button>
-      </div>
-      <div id="tgStatus" style="font-size:11px;color:#555;margin-top:6px"></div>
-    </div>
-
-    <div style="font-size:11px;color:#555;border-top:1px solid #1e2d40;padding-top:8px;margin-top:4px">
-      ⏰ <span data-es="Las alertas se verifican cada hora automáticamente" data-en="Alerts are checked every hour automatically">Las alertas se verifican cada hora automáticamente</span>
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th style="width:180px">Acción</th>
+            <th class="right">Precio</th>
+            <th class="right">Hoy %</th>
+            <th class="right">Caída</th>
+            <th class="right">Prob. Rebote</th>
+            <th class="td-center">EMA200 D/S/M</th>
+            <th class="right">Score</th>
+            <th class="td-center">Señal</th>
+            <th class="right">SL</th>
+            <th class="right">TP1</th>
+            <th class="right">TP2</th>
+            <th class="right">P/E</th>
+            <th class="right">EPS</th>
+            <th class="right">Beta</th>
+            <th class="td-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="15" style="text-align:center;padding:40px;color:#bbb">Cargando datos...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="summary">
-    <div class="sitem"><div class="sval" id="s-total">—</div><div class="slbl" data-es="Acciones" data-en="Stocks">Acciones</div></div>
-    <div class="sitem"><div class="sval" style="color:var(--green)" id="s-ideal">—</div><div class="slbl" data-es="Compra Ideal" data-en="Ideal Buy">Compra Ideal</div></div>
-    <div class="sitem"><div class="sval" style="color:var(--accent)" id="s-strong">—</div><div class="slbl" data-es="Caida Fuerte" data-en="Strong Fall">Caida Fuerte</div></div>
-    <div class="sitem"><div class="sval" style="color:#ff9800" id="s-watch">—</div><div class="slbl" data-es="Vigilar" data-en="Watch">Vigilar</div></div>
-    <div class="sitem"><div class="sval" style="color:#555" id="s-wait">—</div><div class="slbl" data-es="Esperar" data-en="Wait">Esperar</div></div>
-    <div class="sup" id="lastUpdate">...</div>
+  <!-- TAB: ALERTAS -->
+  <div id="tabAlerts" style="display:none">
+    <div style="padding:16px 24px 0">
+      <div class="alerts-panel">
+        <div class="alerts-panel-title">🔔 Configurar Alertas</div>
+
+        <div class="alert-section">
+          <div class="alert-section-title">General</div>
+          <div class="alert-row">
+            <label class="toggle"><input type="checkbox" id="alertsEnabled" checked onchange="saveAlerts()"><span class="toggle-slider"></span></label>
+            <label>Alertas activas</label>
+            <label>Alertar cuando caída ≥</label>
+            <input class="alert-input" type="number" id="alertDrop" value="5" min="1" max="30" step="0.5" onchange="saveAlerts()">
+            <label>%</label>
+          </div>
+        </div>
+
+        <div class="alert-section">
+          <div class="alert-section-title" style="color:#26a69a">📱 WhatsApp via CallMeBot</div>
+          <div class="wa-instructions">
+            1. Guarda <strong>+34 644 60 16 21</strong> en WhatsApp como "CallMeBot"<br>
+            2. Envíale: <strong>I allow callmebot to send me messages</strong><br>
+            3. Recibirás tu API key por WhatsApp<br>
+            4. Pega tu número y API key abajo
+          </div>
+          <div class="alert-row">
+            <input class="alert-field" type="text" id="waPhone" placeholder="Número (ej: 15551234567)">
+            <input class="alert-field" type="text" id="waApiKey" placeholder="API Key CallMeBot">
+          </div>
+          <div class="alert-row">
+            <label class="toggle"><input type="checkbox" id="waEnabled" onchange="saveWhatsApp()"><span class="toggle-slider"></span></label>
+            <label>Activar WhatsApp</label>
+            <button class="btn-save-alert" onclick="saveWhatsApp()">💾 Guardar</button>
+            <button class="btn-test-alert" onclick="testWhatsApp()">📱 Probar</button>
+          </div>
+          <div class="alert-status" id="waStatus"></div>
+        </div>
+
+        <div class="alert-section">
+          <div class="alert-section-title" style="color:#1976d2">✈️ Telegram</div>
+          <div class="tg-instructions">
+            1. Busca <strong>@jefersmart_bot</strong> en Telegram<br>
+            2. Escribe <strong>/start</strong><br>
+            3. Pega tu Chat ID abajo
+          </div>
+          <div class="alert-row">
+            <input class="alert-field" type="text" id="tgChatId" placeholder="Chat ID (ej: 1674153389)">
+          </div>
+          <div class="alert-row">
+            <label class="toggle"><input type="checkbox" id="tgEnabled" onchange="saveTelegram()"><span class="toggle-slider"></span></label>
+            <label>Activar Telegram</label>
+            <button class="btn-save-alert" onclick="saveTelegram()">💾 Guardar</button>
+            <button class="btn-test-alert" onclick="testTelegram()">✈️ Probar</button>
+          </div>
+          <div class="alert-status" id="tgStatus"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="grid" id="grid"></div>
+  <!-- TAB: EARNINGS CALENDAR -->
+  <div id="tabEarnings" style="display:none">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Acción</th>
+            <th>Próximo reporte</th>
+            <th class="right">Días restantes</th>
+            <th class="right">EPS estimado</th>
+            <th class="right">Beat rate</th>
+            <th class="right">Beats / Misses</th>
+            <th class="right">Sorpresa prom.</th>
+          </tr>
+        </thead>
+        <tbody id="earningsBody">
+          <tr><td colspan="7" style="text-align:center;padding:40px;color:#bbb">Cargando earnings...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
-<div class="footer">TradeSmart AI · JEFER85 · Yahoo Finance + IA Claude · <span data-es="No es asesoramiento financiero" data-en="Not financial advice">No es asesoramiento financiero</span></div>
+<div class="footer">TradeSmart AI · Datos: Yahoo Finance + Financial Modeling Prep · No es asesoramiento financiero</div>
 
 <script>
-// ── ESTADO ─────────────────────────────────────────────────
+// ── ESTADO ────────────────────────────────────────────────
 let token    = localStorage.getItem('ts_token') || '';
 let userData = null;
 let tickers  = ["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","F"];
 let cache    = {};
+let expandedRows = new Set();
 let loading  = false;
 let lang     = localStorage.getItem('ts_lang') || 'es';
 let authMode = 'login';
+let activeTab= 'dashboard';
 
-const NAMES  = {AAPL:"Apple",MSFT:"Microsoft",GOOGL:"Google",AMZN:"Amazon",NVDA:"NVIDIA",META:"Meta",TSLA:"Tesla",SPY:"S&P 500 ETF",F:"Ford",NFLX:"Netflix",AMD:"AMD",DIS:"Disney",BAC:"Bank of America",INTC:"Intel"};
-const EMOJIS = {AAPL:"🍎",MSFT:"🪟",GOOGL:"🔍",AMZN:"📦",NVDA:"💻",META:"👾",TSLA:"⚡",SPY:"📈",F:"🚗",NFLX:"🎬",AMD:"🔧",DIS:"🏰",BAC:"🏦",INTC:"⚙️"};
-const LOGOS  = {AAPL:["#e0e0e0","#1a1a1a"],MSFT:["#90caf9","#0d47a1"],GOOGL:["#a5d6a7","#1b5e20"],AMZN:["#ffcc02","#e65100"],NVDA:["#69f0ae","#003300"],META:["#81d4fa","#01579b"],TSLA:["#ef9a9a","#b71c1c"],SPY:["#ffd700","#1a1200"],F:["#64b5f6","#0d2a4a"]};
+const NAMES  = {AAPL:"Apple",MSFT:"Microsoft",GOOGL:"Google",AMZN:"Amazon",NVDA:"NVIDIA",META:"Meta",TSLA:"Tesla",SPY:"S&P 500 ETF",F:"Ford",NFLX:"Netflix",AMD:"AMD",DIS:"Disney",BAC:"Bank of America",INTC:"Intel",BABA:"Alibaba"};
+const EMOJIS = {AAPL:"🍎",MSFT:"🪟",GOOGL:"🔍",AMZN:"📦",NVDA:"💻",META:"👾",TSLA:"⚡",SPY:"📈",F:"🚗",NFLX:"🎬",AMD:"🔧",DIS:"🏰",BAC:"🏦",INTC:"⚙️",BABA:"🛍️"};
+const COLORS = {AAPL:"#1a1a1a",MSFT:"#0d47a1",GOOGL:"#1b5e20",AMZN:"#e65100",NVDA:"#1b5e20",META:"#01579b",TSLA:"#b71c1c",SPY:"#1a1200",F:"#0d2a4a"};
 
-// ── IDIOMA ─────────────────────────────────────────────────
-function toggleLang(){lang=lang==='es'?'en':'es';localStorage.setItem('ts_lang',lang);applyLang();}
-function applyLang(){document.querySelectorAll('[data-'+lang+']').forEach(el=>{el.textContent=el.getAttribute('data-'+lang);});}
-applyLang();
+// ── IDIOMA ────────────────────────────────────────────────
+function toggleLang(){lang=lang==='es'?'en':'es';localStorage.setItem('ts_lang',lang);}
 
-// ── AUTH ───────────────────────────────────────────────────
+// ── TABS ──────────────────────────────────────────────────
+function setTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['dashboard','alerts','earnings'][i]===tab);
+  });
+  document.getElementById('tabDashboard').style.display = tab==='dashboard'?'block':'none';
+  document.getElementById('tabAlerts').style.display    = tab==='alerts'?'block':'none';
+  document.getElementById('tabEarnings').style.display  = tab==='earnings'?'block':'none';
+  if (tab==='earnings') renderEarningsTable();
+}
+
+// ── AUTH ──────────────────────────────────────────────────
 function openModal(mode){authMode=mode;document.getElementById('authModal').style.display='flex';updateModalUI();}
 function closeModal(){document.getElementById('authModal').style.display='none';}
 function toggleAuthMode(){authMode=authMode==='login'?'register':'login';updateModalUI();}
 function updateModalUI(){
   const isLogin=authMode==='login';
-  document.getElementById('modalTitle').textContent=isLogin?(lang==='es'?'Iniciar Sesión':'Login'):(lang==='es'?'Crear Cuenta':'Create Account');
-  document.getElementById('modalSub').textContent=isLogin?(lang==='es'?'Accede a tu dashboard':'Access your dashboard'):(lang==='es'?'Es gratis para empezar':'Free to start');
+  document.getElementById('modalTitle').textContent=isLogin?'Iniciar Sesión':'Crear Cuenta';
+  document.getElementById('modalSub').textContent=isLogin?'Accede a tu dashboard':'Crea tu cuenta gratuita';
   document.getElementById('nameGroup').style.display=isLogin?'none':'block';
-  document.getElementById('authBtn').textContent=isLogin?(lang==='es'?'Entrar':'Login'):(lang==='es'?'Crear cuenta gratis':'Create free account');
-  document.getElementById('switchText').textContent=isLogin?(lang==='es'?'¿No tienes cuenta?':'No account?'):(lang==='es'?'¿Ya tienes cuenta?':'Already have account?');
-  document.getElementById('switchLink').textContent=isLogin?(lang==='es'?'Regístrate gratis':'Sign up free'):(lang==='es'?'Inicia sesión':'Log in');
+  document.getElementById('authBtn').textContent=isLogin?'Entrar':'Crear cuenta gratis';
+  document.getElementById('switchText').textContent=isLogin?'¿No tienes cuenta?':'¿Ya tienes cuenta?';
+  document.getElementById('switchLink').textContent=isLogin?'Regístrate gratis':'Inicia sesión';
   document.getElementById('modalError').style.display='none';
 }
-
 async function submitAuth(){
   const email=document.getElementById('authEmail').value;
   const password=document.getElementById('authPassword').value;
   const name=document.getElementById('authName').value;
-  if(!email||!password){showModalError(lang==='es'?'Completa todos los campos':'Fill all fields');return;}
+  if(!email||!password){showModalError('Completa todos los campos');return;}
   const btn=document.getElementById('authBtn');
-  btn.textContent=lang==='es'?'Cargando...':'Loading...';
-  btn.disabled=true;
+  btn.textContent='Cargando...';btn.disabled=true;
   try{
-    const endpoint=authMode==='login'?'/api/auth/login':'/api/auth/register';
-    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name})});
+    const r=await fetch(authMode==='login'?'/api/auth/login':'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,name})});
     const d=await r.json();
     if(d.error){showModalError(d.error);btn.textContent=authMode==='login'?'Entrar':'Crear cuenta';btn.disabled=false;return;}
     token=d.token;userData=d.user;
     localStorage.setItem('ts_token',token);
-    closeModal();
-    showDashboard();
+    closeModal();showDashboard();
   }catch(e){showModalError(e.message);btn.textContent='Error';btn.disabled=false;}
 }
 function showModalError(msg){const el=document.getElementById('modalError');el.textContent=msg;el.style.display='block';}
 function logout(){token='';userData=null;localStorage.removeItem('ts_token');location.reload();}
-
 async function checkAuth(){
   if(!token)return;
   try{
     const r=await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+token}});
     const d=await r.json();
-    if(d.ok){userData=d.user;tickers=d.user.watchlist||tickers;showDashboard();}
+    if(d.ok){userData=d.user;tickers=d.user.watchlist||tickers;showDashboard();loadAlertConfig();}
     else{localStorage.removeItem('ts_token');token='';}
   }catch(e){localStorage.removeItem('ts_token');token='';}
 }
-
 function showDashboard(){
-  document.getElementById('heroSection').style.display='none';
+  document.getElementById('landingSection').style.display='none';
   document.getElementById('dashboardSection').style.display='block';
   document.getElementById('navGuest').style.display='none';
   document.getElementById('navUser').style.display='block';
-  document.getElementById('userEmail').textContent=userData.email;
+  document.getElementById('navTabs').style.display='flex';
+  document.getElementById('userEmailChip').textContent=userData.email;
   const isPro=userData.plan==='pro';
-  document.getElementById('planBadge').textContent=isPro?'PRO':'FREE';
-  document.getElementById('planBadge').className='plan-badge '+(isPro?'plan-pro':'plan-free');
+  document.getElementById('planPill').textContent=isPro?'PRO':'FREE';
+  document.getElementById('planPill').className='plan-pill '+(isPro?'pill-pro':'pill-free');
   document.getElementById('upgradeBtn').style.display=isPro?'none':'block';
-  if(isPro)document.getElementById('alertsPanel').style.display='block';
   fetchAll();
-  if(isPro)loadAlertConfig();
 }
 
-// ── STRIPE ─────────────────────────────────────────────────
+// ── STRIPE ────────────────────────────────────────────────
 async function checkout(){
   const r=await fetch('/api/stripe/checkout',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
   const d=await r.json();
   if(d.url)window.location.href=d.url;
-  else alert(lang==='es'?'Stripe no configurado aún. Contacta al admin.':'Stripe not configured yet.');
+  else alert('Stripe no configurado aún.');
 }
 
-// ── ALERTAS ────────────────────────────────────────────────
-async function saveAlerts(){
-  const enabled=document.getElementById('alertsEnabled').checked;
-  const dropAlert=parseFloat(document.getElementById('alertDrop').value)||5;
-  await fetch('/api/alerts/settings',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({enabled,dropAlert})});
-}
-
-async function saveWhatsApp(){
-  const phone=document.getElementById('waPhone').value.trim().replace(/[^0-9]/g,'');
-  const apikey=document.getElementById('waApiKey').value.trim();
-  const enabled=document.getElementById('waEnabled').checked;
-  if(!phone||!apikey){document.getElementById('waStatus').textContent=lang==='es'?'⚠️ Ingresa tu número y API key':'⚠️ Enter your number and API key';return;}
-  try{
-    await fetch('/api/alerts/whatsapp',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone,apikey,enabled})});
-    document.getElementById('waStatus').style.color='#25D366';
-    document.getElementById('waStatus').textContent=lang==='es'?'✅ Configuración guardada':'✅ Configuration saved';
-  }catch(e){document.getElementById('waStatus').textContent='Error: '+e.message;}
-}
-
-async function saveTelegram(){
-  const chatId=document.getElementById('tgChatId').value.trim();
-  const enabled=document.getElementById('tgEnabled').checked;
-  if(!chatId){document.getElementById('tgStatus').textContent=lang==='es'?'⚠️ Ingresa tu Chat ID':'⚠️ Enter your Chat ID';return;}
-  try{
-    await fetch('/api/alerts/telegram',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({chatId,enabled})});
-    document.getElementById('tgStatus').style.color='#29b6f6';
-    document.getElementById('tgStatus').textContent=lang==='es'?'✅ Configuración guardada':'✅ Configuration saved';
-  }catch(e){document.getElementById('tgStatus').textContent='Error: '+e.message;}
-}
-
-async function testTelegram(){
-  const chatId=document.getElementById('tgChatId').value.trim();
-  if(!chatId){document.getElementById('tgStatus').textContent=lang==='es'?'⚠️ Guarda tu Chat ID primero':'⚠️ Save your Chat ID first';return;}
-  document.getElementById('tgStatus').textContent=lang==='es'?'✈️ Enviando mensaje de prueba...':'✈️ Sending test message...';
-  await saveTelegram();
-  try{
-    const r=await fetch('/api/alerts/telegram/test',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
-    const d=await r.json();
-    document.getElementById('tgStatus').style.color=d.ok?'#29b6f6':'#f44336';
-    document.getElementById('tgStatus').textContent=d.ok?(lang==='es'?'✅ Mensaje enviado a Telegram':'✅ Message sent to Telegram'):(lang==='es'?'❌ Error: verifica tu Chat ID':'❌ Error: check your Chat ID');
-  }catch(e){document.getElementById('tgStatus').textContent='Error: '+e.message;}
-}
-
-async function testWhatsApp(){
-  const phone=document.getElementById('waPhone').value.trim().replace(/[^0-9]/g,'');
-  const apikey=document.getElementById('waApiKey').value.trim();
-  if(!phone||!apikey){document.getElementById('waStatus').textContent=lang==='es'?'⚠️ Guarda tu configuración primero':'⚠️ Save your config first';return;}
-  document.getElementById('waStatus').textContent=lang==='es'?'📱 Enviando mensaje de prueba...':'📱 Sending test message...';
-  await saveWhatsApp();
-  try{
-    const r=await fetch('/api/alerts/whatsapp/test',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
-    const d=await r.json();
-    document.getElementById('waStatus').style.color=d.ok?'#25D366':'#f44336';
-    document.getElementById('waStatus').textContent=d.ok?(lang==='es'?'✅ Mensaje enviado a tu WhatsApp':'✅ Message sent to your WhatsApp'):(lang==='es'?'❌ Error: verifica tu número y API key':'❌ Error: check your number and API key');
-  }catch(e){document.getElementById('waStatus').textContent='Error: '+e.message;}
-}
-
-// ── HELPERS ────────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────
 function getParams(){return{dropMin:parseFloat(document.getElementById('dropMin').value)||5,dropMax:parseFloat(document.getElementById('dropMax').value)||10,slPct:parseFloat(document.getElementById('slPct').value)||7,tp1Pct:parseFloat(document.getElementById('tp1Pct').value)||10,tp2Pct:parseFloat(document.getElementById('tp2Pct').value)||20};}
-function probColor(p){if(p>=70)return"#00e676";if(p>=50)return"#ffd700";if(p>=35)return"#ff9800";return"#f44336";}
-function peColor(pe){if(!pe)return"#555";if(pe<15)return"#00e676";if(pe<30)return"#ffd700";return"#f44336";}
-function fmtCap(v){if(!v)return"—";if(v>=1e12)return"$"+(v/1e12).toFixed(2)+"T";if(v>=1e9)return"$"+(v/1e9).toFixed(1)+"B";return"$"+(v/1e6).toFixed(0)+"M";}
-function fmtN(v,d=2){return v!=null&&v!==undefined?parseFloat(v).toFixed(d):"—";}
-function getSignal(d,p){if(!d||d.error)return"wait";const allOk=d.trend&&d.rsi14<=45&&d.volRelative>=1.5;if(d.dropFromHigh>=p.dropMax&&allOk)return"strong";if(d.dropFromHigh>=p.dropMin&&d.dropFromHigh<p.dropMax&&allOk)return"ideal";if(d.dropFromHigh>=p.dropMin)return"watch";return"wait";}
-const isPro=()=>userData?.plan==='pro';
+function fmtN(v,d=2){return v!=null&&v!==undefined&&!isNaN(v)?parseFloat(v).toFixed(d):'—';}
+function fmtCap(v){if(!v)return'—';if(v>=1e12)return'$'+(v/1e12).toFixed(2)+'T';if(v>=1e9)return'$'+(v/1e9).toFixed(1)+'B';return'$'+(v/1e6).toFixed(0)+'M';}
+function probColor(p){if(p>=70)return'#26a69a';if(p>=50)return'#f57f17';if(p>=35)return'#e65100';return'#ef5350';}
+function peClass(pe){if(!pe||pe==='—')return'';if(pe<15)return'fv-good';if(pe<30)return'fv-warn';return'fv-bad';}
+function isPro(){return userData?.plan==='pro';}
 
-// ── RENDER CARD ────────────────────────────────────────────
-function cardHTML(ticker,d,p){
-  const name=NAMES[ticker]||ticker;
-  const emoji=EMOJIS[ticker]||"📊";
-  const logo=LOGOS[ticker]||["#e0e0e0","#1a1a1a"];
-  const signal=getSignal(d,p);
-  const sigMap={ideal:{cls:"ideal",badge:"b-ideal",txt:lang==='es'?"✅ COMPRA IDEAL":"✅ IDEAL BUY"},strong:{cls:"strong",badge:"b-strong",txt:lang==='es'?"⭐ CAIDA FUERTE":"⭐ STRONG FALL"},watch:{cls:"watch",badge:"b-watch",txt:lang==='es'?"👀 VIGILAR":"👀 WATCH"},wait:{cls:"",badge:"b-wait",txt:lang==='es'?"⏳ ESPERAR":"⏳ WAIT"}};
-  const s=sigMap[signal];
-  if(!d||d.loading)return`<div class="card ${s.cls}" id="card-${ticker}"><button class="remove-btn" onclick="removeTicker('${ticker}')">✕</button><div class="ch"><div class="logo" style="background:${logo[1]};color:${logo[0]}">${emoji}</div><div><div class="sname">${name}</div><div class="sticker">${ticker}</div></div><span class="sbadge b-load" style="margin-left:auto">${lang==='es'?'⏳ Cargando...':'⏳ Loading...'}</span></div><div class="cb"><div style="height:28px;width:55%;margin-bottom:8px" class="sk"></div><div style="height:7px;margin:8px 0" class="sk"></div><div style="height:80px;margin:8px 0;border-radius:8px" class="sk"></div><div style="height:60px;margin:8px 0;border-radius:6px" class="sk"></div></div></div>`;
-  if(d.error)return`<div class="card" id="card-${ticker}"><button class="remove-btn" onclick="removeTicker('${ticker}')">✕</button><div class="ch"><div class="logo" style="background:${logo[1]};color:${logo[0]}">${emoji}</div><div><div class="sname">${name}</div><div class="sticker">${ticker}</div></div><span class="sbadge b-wait" style="margin-left:auto">⚠️ Error</span></div><div class="cb" style="text-align:center;padding:20px;color:#f44336">${d.error}</div></div>`;
-  const{price,changeDay,high52w,dropFromHigh,rsi14,trend,volRelative,ema200,reboundProb5,reboundProb10,reboundProb15,mktCap,pe,fwdPe,eps,divYield,beta,historicalCases}=d;
-  const ia=d.ia||{};const drivers=ia.drivers||[];
-  const sl=price*(1-p.slPct/100),tp1=price*(1+p.tp1Pct/100),tp2=price*(1+p.tp2Pct/100);
-  const dropCol=dropFromHigh>=p.dropMax?"#ffd700":dropFromHigh>=p.dropMin?"#00e676":dropFromHigh>2?"#ff9800":"#555";
-  const barCol=dropFromHigh>=p.dropMax?"#ffd700":dropFromHigh>=p.dropMin?"#00e676":"#333";
-  const barPct=Math.min((dropFromHigh/40)*100,100);
-  const chgCol=changeDay>=0?"#00e676":"#f44336";
-  const drop52=high52w?((high52w-price)/high52w*100).toFixed(1):"—";
-  // Probabilidad segun nivel exacto de caida
-// Interpolacion entre los 3 niveles historicos
-const probRel = dropFromHigh>=30 ? Math.max(0, reboundProb15-15)  // caida muy fuerte, prob baja
-              : dropFromHigh>=20 ? Math.max(0, reboundProb15-8)
-              : dropFromHigh>=15 ? reboundProb15
-              : dropFromHigh>=10 ? reboundProb10
-              : dropFromHigh>=5  ? reboundProb5
-              : Math.min(reboundProb5+10, 95);  // caida pequeña, alta prob rebote
-  const outlookCol=ia.outlook==="COMPRA"||ia.outlook==="BUY"?"#00e676":ia.outlook==="VENTA"||ia.outlook==="SELL"?"#f44336":"#ffd700";
-  const bullD=drivers.filter(d=>d.type==="bull").length;
-  const bearD=drivers.filter(d=>d.type==="bear").length;
-
-  const driversSection=isPro()?`
-    <div class="drivers-box">
-      <div class="drivers-title" style="color:${bullD>bearD?"#00e676":bullD<bearD?"#f44336":"#ffd700"}">${drivers.length?(bullD>bearD?"🐂":"🐻")+" "+(lang==='es'?`Drivers Alcistas (${bullD}) vs Bajistas (${bearD})`:`Bull Drivers (${bullD}) vs Bear (${bearD})`):(lang==='es'?'⏳ Cargando análisis IA...':'⏳ Loading AI analysis...')}</div>
-      ${drivers.map(dr=>`<div class="driver-item"><span style="font-size:12px;flex-shrink:0;margin-top:1px">${dr.icon}</span><span class="driver-txt">${dr.text}</span><span class="driver-badge ${dr.type==="bull"?"db-bull":dr.type==="bear"?"db-bear":"db-neutral"}">${dr.strength}</span></div>`).join("")}
-      ${ia.outlookReason?`<div class="outlook-row">💡 ${ia.outlookReason}</div>`:""}
-    </div>`:`
-    <div class="pro-lock">
-      <div class="pro-lock-icon">🔒</div>
-      <div class="pro-lock-txt">${lang==='es'?'Los Drivers IA muestran los mayores puntos de compra y venta específicos de cada empresa':'AI Drivers show the major buy/sell signals specific to each company'}</div>
-      <button class="pro-lock-btn" onclick="checkout()">${lang==='es'?'⭐ Desbloquear con Pro $9.99/mes':'⭐ Unlock with Pro $9.99/mo'}</button>
-    </div>`;
-
-  // Usar FMP si disponible, sino Yahoo/IA
-  const fmp=d.fmp||{};
-  const realPe      = fmp.pe       || pe;
-  const realFwdPe   = fmp.fwdPe    || fwdPe;
-  const realEps     = fmp.eps      || eps;
-  const realMktCap  = fmp.mktCap   || mktCap;
-  const realDiv     = fmp.dividendYield || fmp.divYield || divYield;
-  const realBeta    = fmp.beta     || beta;
-  const realMargin  = fmp.margin   || ia.margin;
-  const realRoe     = fmp.roe      || ia.roe;
-  const realDebt    = fmp.debtEquity || ia.debtEquity;
-  const realRoa     = fmp.roa;
-  const realGross   = fmp.grossMargin;
-  const realCurrent = fmp.currentRatio;
-  const dataSource  = fmp.ok ? '🟢 FMP Real' : '🟡 Yahoo';
-
-  const fundItems=[
-    ["P/E Trailing",   fmtN(realPe,1),    peColor(realPe)],
-    ["P/E Forward",    fmtN(realFwdPe,1), peColor(realFwdPe)],
-    ["EPS (TTM)",      fmtN(realEps,2),   realEps>0?"#00e676":"#f44336"],
-    ["Market Cap",     fmtCap(realMktCap),"#ffd700"],
-    [lang==='es'?"Dividendo":"Dividend", realDiv?fmtN(realDiv,2)+"%":"—", realDiv>0?"#00e676":"#555"],
-    ["Beta",           fmtN(realBeta,2),  realBeta<1?"#00e676":realBeta<1.5?"#ffd700":"#f44336"],
-    [lang==='es'?"Margen neto":"Net margin", realMargin?fmtN(realMargin,1)+"%":"—", realMargin>20?"#00e676":realMargin>10?"#ffd700":"#f44336"],
-    ["ROE",            realRoe?fmtN(realRoe,1)+"%":"—", realRoe>20?"#00e676":realRoe>10?"#ffd700":"#f44336"],
-    [lang==='es'?"Margen bruto":"Gross margin", realGross?fmtN(realGross,1)+"%":"—", realGross>40?"#00e676":realGross>20?"#ffd700":"#f44336"],
-    ["ROA",            realRoa?fmtN(realRoa,1)+"%":"—", realRoa>10?"#00e676":realRoa>5?"#ffd700":"#f44336"],
-    [lang==='es'?"Deuda/Equity":"Debt/Equity", fmtN(realDebt,2), realDebt<0.5?"#00e676":realDebt<1.5?"#ffd700":"#f44336"],
-    [lang==='es'?"Ratio corriente":"Current ratio", fmtN(realCurrent,2), realCurrent>2?"#00e676":realCurrent>1?"#ffd700":"#f44336"],
-    ["EMA 200",        "$"+fmtN(ema200,2), trend?"#00e676":"#f44336"],
-    ["RSI 14",         fmtN(rsi14,0),     rsi14<=30?"#00e676":rsi14<=45?"#ffd700":rsi14<=70?"#888":"#f44336"],
-  ].map(([k,v,c])=>`<div class="fund-item"><span class="fund-key">${k}</span><span class="fund-val" style="color:${c}">${v}</span></div>`).join("");
-
-  return`<div class="card ${s.cls}" id="card-${ticker}">
-    <button class="remove-btn" onclick="removeTicker('${ticker}')">✕</button>
-    <div class="ch">
-      <div class="logo" style="background:${logo[1]};color:${logo[0]}">${emoji}</div>
-      <div><div class="sname">${name}</div><div class="sticker">${ticker} <span style="background:rgba(25,50,100,.4);border:1px solid #1e3a5f;padding:1px 5px;border-radius:3px;font-size:10px">${isPro()?'Pro+IA':'Yahoo'}</span></div></div>
-      <span class="sbadge ${s.badge}">${s.txt}</span>
-    </div>
-    <div class="cb">
-      <div class="prow"><span class="price-big">$${fmtN(price,2)}</span><span class="drop-pct" style="color:${dropCol}">▼ ${fmtN(dropFromHigh,1)}%</span></div>
-      <div class="chg-row">
-        <span style="color:${chgCol}">${changeDay>=0?"+":""}${fmtN(changeDay,2)}% ${lang==='es'?'hoy':'today'}</span>
-        <span>${lang==='es'?'Max 52s':'52w High'}: $${fmtN(high52w,2)} (${drop52}% ${lang==='es'?'abajo':'down'})</span>
-        ${ia.outlook?`<span style="color:${outlookCol}">IA: ${ia.outlook}</span>`:""}
-      </div>
-      <div class="pbar"><div class="pbar-fill" style="width:${barPct}%;background:${barCol}"></div></div>
-      <div class="pbar-lbl"><span>0%</span><span style="color:#00e676">${p.dropMin}%</span><span style="color:#ffd700">${p.dropMax}%</span><span style="color:#f44336">40%+</span></div>
-
-      ${driversSection}
-
-      <div class="prob-box">
-        <div class="prob-title">📊 ${lang==='es'?`PROBABILIDAD HISTÓRICA DE REBOTE (${historicalCases||0} casos)`:`HISTORICAL REBOUND PROBABILITY (${historicalCases||0} cases)`}</div>
-        ${[
-          [lang==='es'?"Tras caida ≥5%":"After drop ≥5%",   reboundProb5||0,  dropFromHigh>=5  && dropFromHigh<10],
-          [lang==='es'?"Tras caida ≥10%":"After drop ≥10%", reboundProb10||0, dropFromHigh>=10 && dropFromHigh<15],
-          [lang==='es'?"Tras caida ≥15%":"After drop ≥15%", reboundProb15||0, dropFromHigh>=15],
-        ].map(([l,pv,isActive])=>`
-          <div class="prob-row" style="${isActive?'background:rgba(255,215,0,0.06);border-radius:6px;padding:3px 4px;margin:-3px -4px 2px':'margin-bottom:5px'}">
-            <span class="prob-lbl" style="${isActive?'color:#ffd700;font-weight:700':''}">
-              ${isActive?'▶ ':''}${l}
-            </span>
-            <div class="prob-track">
-              <div class="prob-fill" style="width:${pv}%;background:${isActive?probColor(pv):probColor(pv)+'99'}"></div>
-            </div>
-            <span class="prob-pct" style="color:${isActive?probColor(pv):probColor(pv)+'88'};font-weight:${isActive?'800':'400'}">${pv}%</span>
-            ${isActive?`<span style="font-size:9px;color:#ffd700;margin-left:4px">◀</span>`:''}
-          </div>`).join("")}
-        <div style="font-size:10px;color:#555;margin-top:6px;text-align:right">
-          ${lang==='es'?`Caida actual: ${fmtN(dropFromHigh,1)}% → Prob. rebote: `:`Current drop: ${fmtN(dropFromHigh,1)}% → Rebound prob: `}
-          <span style="color:${probColor(probRel||0)};font-weight:700;font-size:12px">${probRel||0}%</span>
-        </div>
-      </div>
-
-      <div class="levels">
-        ${[["STOP LOSS","$"+fmtN(sl,2),"#f44336","-"+p.slPct+"%"],["TP1","$"+fmtN(tp1,2),"#66bb6a","+"+p.tp1Pct+"%"],["TP2","$"+fmtN(tp2,2),"#ffd700","+"+p.tp2Pct+"%"]].map(([l,v,c,ss])=>`<div class="lev"><div class="lev-lbl">${l}</div><div class="lev-val" style="color:${c}">${v}</div><div class="lev-lbl">${ss}</div></div>`).join("")}
-      </div>
-
-      <!-- SEÑALES MULTI-TIMEFRAME -->
-      <div class="signals-section" id="sigs-${ticker}">
-        <div class="signals-title">📡 ${lang==='es'?`SEÑAL EMA${d.chartEma||200} EN MÚLTIPLES TIMEFRAMES`:`EMA${d.chartEma||200} SIGNAL ACROSS TIMEFRAMES`}</div>
-        <div class="signals-grid" id="sigsgrid-${ticker}">
-          ${renderSignals(d.tfSignals, d.chartEma||200, lang)}
-        </div>
-      </div>
-
-      <div class="fund-section">
-        <div class="fund-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>📋 ${lang==='es'?'FUNDAMENTALES':'FUNDAMENTALS'}</span>
-          <span style="font-size:9px;color:#555">${dataSource}</span>
-        </div>
-        <div class="fund-grid">${fundItems}</div>
-      </div>
-
-      <div class="filters">
-        ${[[trend,lang==='es'?"Sobre EMA200":"Above EMA200"],[rsi14<=45,"RSI "+fmtN(rsi14,0)],[volRelative>=1.5,"Vol x"+fmtN(volRelative,1)],[pe&&pe<30,"P/E<30"]].map(([ok,l])=>`<span class="fc ${ok?"fc-ok":"fc-bad"}">${ok?"✓":"✗"} ${l}</span>`).join("")}
-      </div>
-
-      <!-- GRAFICO -->
-      <div class="chart-section">
-        <div class="chart-controls">
-          <span style="font-size:11px;color:#555">EMA:</span>
-          <input class="ema-input" type="number" id="ema-${ticker}" value="${d.chartEma||200}" min="5" max="500" onchange="loadChart('${ticker}')">
-          <span style="font-size:11px;color:#555">${lang==='es'?'Timeframe:':'Timeframe:'}</span>
-          ${['5m','15m','1h','4h','1d','1wk','1mo'].map(tf=>`<button class="tf-btn ${(d.chartTf||'1d')===tf?'active':''}" onclick="setChartTf('${ticker}','${tf}')">${tf}</button>`).join('')}
-        </div>
-        <div class="chart-loading" id="chart-loading-${ticker}">${lang==='es'?'📊 Cargando gráfico...':'📊 Loading chart...'}</div>
-        <div class="chart-container" id="chart-${ticker}" style="height:240px;display:none"></div>
-      </div>
-
-      <div class="srow">
-        ${[[(p.tp1Pct/p.slPct).toFixed(1)+"x","#00e676","R/R TP1"],[(p.tp2Pct/p.slPct).toFixed(1)+"x","#ffd700","R/R TP2"],[(probRel||0)+"%",probColor(probRel||0),lang==='es'?"Prob. rebote":"Rebound prob"],[fmtN(dropFromHigh,1)+"%","#e0e0e0",lang==='es'?"Caida actual":"Current drop"]].map(([v,c,l])=>`<div class="st"><div class="stv" style="color:${c}">${v}</div><div class="stl">${l}</div></div>`).join("")}
-      </div>
-    </div>
-  </div>`;
+function getSignal(d,p){
+  if(!d||d.error)return'wait';
+  const allOk=d.trend&&d.rsi14<=45&&d.volRelative>=1.5;
+  if(d.dropFromHigh>=p.dropMax&&allOk)return'strong';
+  if(d.dropFromHigh>=p.dropMin&&d.dropFromHigh<p.dropMax&&allOk)return'ideal';
+  if(d.dropFromHigh>=p.dropMin)return'watch';
+  return'wait';
 }
 
-function renderAll(){
+// ── TICKER BAR ────────────────────────────────────────────
+function updateTickerBar(){
+  const bar=document.getElementById('tickerBar');
+  const items=tickers.map(t=>{
+    const d=cache[t];
+    if(!d||d.error||d.loading)return`<div class="ticker-item"><span class="ticker-name">${t}</span><span class="sk" style="width:40px;height:12px"></span></div>`;
+    const chg=d.changeDay;
+    const cls=chg>=0?'ticker-up':'ticker-down';
+    return`<div class="ticker-item"><span class="ticker-name">${t}</span><span>$${fmtN(d.price,2)}</span><span class="${cls}">${chg>=0?'+':''}${fmtN(chg,2)}%</span></div>`;
+  }).join('');
+  bar.innerHTML=items;
+}
+
+// ── RENDER TABLA ──────────────────────────────────────────
+function renderTable(){
   const p=getParams();
-  document.getElementById('grid').innerHTML=tickers.map(t=>cardHTML(t,cache[t],p)).join('');
+  const tbody=document.getElementById('tableBody');
   let ideal=0,strong=0,watch=0,wait=0;
-  tickers.forEach(t=>{const s=getSignal(cache[t],p);if(s==='ideal')ideal++;else if(s==='strong')strong++;else if(s==='watch')watch++;else wait++;});
-  document.getElementById('s-total').textContent=tickers.length;
+  let rows='';
+
+  tickers.forEach(t=>{
+    const d=cache[t];
+    const signal=getSignal(d,p);
+    if(signal==='ideal')ideal++;
+    else if(signal==='strong')strong++;
+    else if(signal==='watch')watch++;
+    else wait++;
+
+    const expanded=expandedRows.has(t);
+
+    if(!d||d.loading){
+      rows+=`<tr onclick="toggleRow('${t}')"><td colspan="15"><div style="display:flex;align-items:center;gap:8px;padding:4px 0"><div style="width:28px;height:28px;border-radius:6px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">${EMOJIS[t]||'📊'}</div><div><div style="font-weight:600">${NAMES[t]||t}</div><div class="sk" style="width:80px;height:10px;margin-top:3px"></div></div></div></td></tr>`;
+      return;
+    }
+    if(d.error){
+      rows+=`<tr><td colspan="15" style="color:#ef5350;font-size:12px">Error en ${t}: ${d.error}</td></tr>`;
+      return;
+    }
+
+    const fmp=d.fmp||{};
+    const {price,changeDay,dropFromHigh,rsi14,trend,volRelative,reboundProb5,reboundProb10,reboundProb15}=d;
+    const sl=price*(1-p.slPct/100);
+    const tp1=price*(1+p.tp1Pct/100);
+    const tp2=price*(1+p.tp2Pct/100);
+    const chgCls=changeDay>=0?'chg-up':'chg-dn';
+    const dropCls=dropFromHigh>=p.dropMax?'drop-strong':dropFromHigh>=p.dropMin?'drop-ideal':dropFromHigh>2?'drop-watch':'drop-normal';
+    const barColor=dropFromHigh>=p.dropMax?'#f57f17':dropFromHigh>=p.dropMin?'#26a69a':'#e0e0e0';
+    const barPct=Math.min((dropFromHigh/40)*100,100);
+    const probRel=dropFromHigh>=15?reboundProb15:dropFromHigh>=10?reboundProb10:reboundProb5;
+
+    // EMA pills
+    const tfSigs=d.tfSignals||{};
+    const emaPills=['1d','1wk','1mo'].map(tf=>{
+      const s=tfSigs[tf];
+      if(!s||s.error)return`<span class="ema-pill ema-na">${tf==='1d'?'D':tf==='1wk'?'S':'M'}?</span>`;
+      if(s.cross==='golden')return`<span class="ema-pill ema-cross-gold">${tf==='1d'?'D':tf==='1wk'?'S':'M'}✨</span>`;
+      if(s.cross==='death')return`<span class="ema-pill ema-cross-death">${tf==='1d'?'D':tf==='1wk'?'S':'M'}💀</span>`;
+      const cls=s.trend==='above'?'ema-up':'ema-dn';
+      return`<span class="ema-pill ${cls}">${tf==='1d'?'D':tf==='1wk'?'S':'M'}${s.trend==='above'?'↑':'↓'}</span>`;
+    }).join('');
+
+    // Signal badge
+    const sigMap={ideal:'sig-ideal',strong:'sig-strong',watch:'sig-watch',wait:'sig-wait'};
+    const sigTxt={ideal:'✅ COMPRA IDEAL',strong:'⭐ CAÍDA FUERTE',watch:'👀 VIGILAR',wait:'⏳ ESPERAR'};
+
+    // Score badge
+    const sc=d.score;
+    const scBadge=sc?`<span class="score-badge ${sc>=75?'score-hi':sc>=55?'score-mid':sc>=35?'score-low':'score-none'}">${sc}/100</span>`:'<span style="color:#bbb">—</span>';
+
+    // PE y EPS — FMP primero
+    const realPe  = fmp.pe  || d.pe;
+    const realEps = fmp.eps || d.eps;
+    const realBeta= fmp.beta|| d.beta;
+
+    rows+=`
+    <tr onclick="toggleRow('${t}')" style="cursor:pointer" class="${expanded?'selected-row':''}">
+      <td>
+        <div class="stock-cell">
+          <div style="width:28px;height:28px;border-radius:6px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0">${EMOJIS[t]||'📊'}</div>
+          <div>
+            <div class="stock-name">${NAMES[t]||t} <span style="font-size:11px;color:#bbb;font-weight:400">${t}</span></div>
+          </div>
+        </div>
+      </td>
+      <td class="td-right"><strong>$${fmtN(price,2)}</strong></td>
+      <td class="td-right ${chgCls}">${changeDay>=0?'+':''}${fmtN(changeDay,2)}%</td>
+      <td class="td-right">
+        <div class="drop-bar-wrap">
+          <div class="drop-bar-track"><div class="drop-bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
+          <span class="drop-val ${dropCls}">${fmtN(dropFromHigh,1)}%</span>
+        </div>
+      </td>
+      <td class="td-right"><span style="color:${probColor(probRel||0)};font-weight:600">${probRel||0}%</span></td>
+      <td class="td-center"><div class="ema-pills">${emaPills}</div></td>
+      <td class="td-right">${scBadge}</td>
+      <td class="td-center"><span class="signal-badge ${sigMap[signal]}">${sigTxt[signal]}</span></td>
+      <td class="td-right" style="color:#ef5350">$${fmtN(sl,2)}</td>
+      <td class="td-right" style="color:#26a69a">$${fmtN(tp1,2)}</td>
+      <td class="td-right" style="color:#f57f17">$${fmtN(tp2,2)}</td>
+      <td class="td-right ${peClass(realPe)}">${realPe?fmtN(realPe,1):'—'}</td>
+      <td class="td-right">${realEps?'$'+fmtN(realEps,2):'—'}</td>
+      <td class="td-right">${realBeta?fmtN(realBeta,2):'—'}</td>
+      <td class="td-center"><button onclick="event.stopPropagation();removeTicker('${t}')" style="background:none;border:1px solid #e0e4eb;color:#999;padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px">✕ Quitar</button></td>
+    </tr>
+    ${expanded?`<tr class="detail-row"><td colspan="15">${renderDetail(t,d,p)}</td></tr>`:''}`;
+  });
+
+  tbody.innerHTML=rows;
   document.getElementById('s-ideal').textContent=ideal;
   document.getElementById('s-strong').textContent=strong;
   document.getElementById('s-watch').textContent=watch;
   document.getElementById('s-wait').textContent=wait;
-  // Cargar graficos y señales TF
-  setTimeout(loadChartsForVisible, 200);
+  updateTickerBar();
 }
 
+// ── DETALLE ROW ───────────────────────────────────────────
+function renderDetail(ticker,d,p){
+  const fmp=d.fmp||{};
+  const ia=d.ia||{};
+  const earn=d.earnings||{};
+  const sc=d.scoreData||{};
+  const {price,dropFromHigh,rsi14,trend,ema200,reboundProb5,reboundProb10,reboundProb15}=d;
+  const probRel=dropFromHigh>=15?reboundProb15:dropFromHigh>=10?reboundProb10:reboundProb5;
+
+  // Fundamentales
+  const realPe=fmp.pe||d.pe;
+  const realEps=fmp.eps||d.eps;
+  const realBeta=fmp.beta||d.beta;
+  const fundHtml=`
+    <div class="detail-section">
+      <div class="detail-section-title">📋 Fundamentales</div>
+      ${[
+        ['P/E Trailing',realPe?fmtN(realPe,1):'—',realPe<15?'fv-good':realPe<30?'fv-warn':'fv-bad'],
+        ['P/E Forward',fmp.fwdPe?fmtN(fmp.fwdPe,1):'—',''],
+        ['EPS (TTM)',realEps?'$'+fmtN(realEps,2):'—',realEps>0?'fv-good':'fv-bad'],
+        ['Market Cap',fmp.mktCap?fmtCap(fmp.mktCap):fmtCap(d.mktCap),''],
+        ['Dividendo',fmp.dividendYield?fmtN(fmp.dividendYield,2)+'%':'0%',fmp.dividendYield>0?'fv-good':''],
+        ['Div/Acción',fmp.dividendPerShare?'$'+fmtN(fmp.dividendPerShare,2):'$0',''],
+        ['Beta',realBeta?fmtN(realBeta,2):'—',realBeta<1?'fv-good':realBeta<1.5?'fv-warn':'fv-bad'],
+        ['Margen neto',fmp.margin?fmtN(fmp.margin,1)+'%':'—',fmp.margin>20?'fv-good':fmp.margin>10?'fv-warn':'fv-bad'],
+        ['Margen bruto',fmp.grossMargin?fmtN(fmp.grossMargin,1)+'%':'—',fmp.grossMargin>40?'fv-good':''],
+        ['ROE',fmp.roe?fmtN(fmp.roe,1)+'%':'—',fmp.roe>20?'fv-good':fmp.roe>10?'fv-warn':'fv-bad'],
+        ['ROA',fmp.roa?fmtN(fmp.roa,1)+'%':'—',fmp.roa>10?'fv-good':fmp.roa>5?'fv-warn':'fv-bad'],
+        ['Deuda/Equity',fmp.debtEquity?fmtN(fmp.debtEquity,2):'—',fmp.debtEquity<0.5?'fv-good':fmp.debtEquity<1.5?'fv-warn':'fv-bad'],
+        ['Ratio corriente',fmp.currentRatio?fmtN(fmp.currentRatio,2):'—',fmp.currentRatio>2?'fv-good':fmp.currentRatio>1?'fv-warn':'fv-bad'],
+        ['EMA 200','$'+fmtN(ema200,2),trend?'fv-good':'fv-bad'],
+        ['RSI 14',fmtN(rsi14,0),rsi14<=30?'fv-good':rsi14<=45?'fv-warn':rsi14<=70?'':'fv-bad'],
+      ].map(([k,v,c])=>`<div class="fund-row"><span class="fund-key">${k}</span><span class="fund-val ${c}">${v}</span></div>`).join('')}
+    </div>`;
+
+  // Score
+  const scoreHtml=`
+    <div class="detail-section">
+      <div class="detail-section-title">🎯 Score de Entrada</div>
+      ${sc.score!=null?`
+        <div class="score-panel">
+          <div class="score-header">
+            <div>
+              <div class="score-big" style="color:${sc.recColor||'#888'}">${sc.score}<span style="font-size:14px;color:#bbb">/100</span></div>
+              <div class="score-rec" style="color:${sc.recColor||'#888'}">${sc.recommendation}</div>
+            </div>
+            <div style="text-align:right;font-size:12px;color:#888">
+              <div>Drop: <strong>${sc.drop}%</strong></div>
+              <div>RSI: <strong>${sc.rsi}</strong></div>
+              <div>Prob: <strong>${sc.probRel}%</strong></div>
+            </div>
+          </div>
+          ${(sc.factors||[]).map(f=>`<div class="factor-row"><span class="factor-icon">${f.positive===true?'✅':f.positive===false?'❌':'⚖️'}</span><span class="factor-lbl">${f.label}</span><span class="factor-pts" style="color:${f.positive===true?'#26a69a':f.positive===false?'#ef5350':'#f57f17'}">+${f.pts}pts</span></div>`).join('')}
+        </div>`:'<div style="color:#bbb;font-size:12px">Cargando score...</div>'}
+    </div>`;
+
+  // Drivers IA
+  const driversHtml=`
+    <div class="detail-section">
+      <div class="detail-section-title">🤖 Drivers IA</div>
+      ${isPro()?
+        (ia.drivers?.length?
+          `${ia.drivers.map(dr=>`<div class="driver-item"><span class="factor-icon">${dr.icon}</span><span class="driver-txt ${dr.type==='bull'?'d-bull':dr.type==='bear'?'d-bear':'d-neutral'}">${dr.text}</span><span class="driver-strength ${dr.type==='bull'&&dr.strength==='Alto'?'ds-alto-bull':dr.type==='bear'&&dr.strength==='Alto'?'ds-alto-bear':'ds-medio'}">${dr.strength}</span></div>`).join('')}
+          ${ia.outlookReason?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid #f0f0f0;font-size:12px;color:#1976d2">💡 ${ia.outlookReason}</div>`:''}`:
+          '<div style="color:#bbb;font-size:12px">Cargando análisis IA...</div>')+
+          (ia.outlook?`<div style="margin-top:8px;font-size:13px;font-weight:600;color:${ia.outlook==='COMPRA'||ia.outlook==='BUY'?'#26a69a':'#ef5350'}">Veredicto IA: ${ia.outlook}</div>`:''):
+        `<div class="pro-lock"><span>🔒</span><span style="color:#555;font-size:12px">Los drivers IA requieren Plan Pro</span><button class="pro-lock-btn" onclick="checkout()">⭐ Upgrade Pro</button></div>`}
+    </div>`;
+
+  // Earnings
+  const earningsHtml=`
+    <div class="detail-section">
+      <div class="detail-section-title">📅 Earnings</div>
+      ${isPro()?
+        (earn.upcoming?.[0]?`
+          <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:4px;padding:8px 10px;margin-bottom:8px">
+            <div style="font-size:11px;color:#888">Próximo reporte</div>
+            <div style="font-size:14px;font-weight:700;color:#f57f17">${new Date(earn.upcoming[0].date).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})}</div>
+            ${earn.upcoming[0].epsEstimated?`<div style="font-size:11px;color:#666;margin-top:2px">EPS estimado: <strong>$${parseFloat(earn.upcoming[0].epsEstimated).toFixed(2)}</strong></div>`:''}
+          </div>`:'<div style="color:#bbb;font-size:12px">Sin próximo reporte</div>')+
+          (earn.beatRate!=null?`
+            <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <div style="background:#f5f5f5;border-radius:4px;padding:4px 8px;text-align:center">
+                <div style="font-size:13px;font-weight:700;color:#26a69a">${earn.beatRate}%</div>
+                <div style="font-size:10px;color:#888">Beat rate</div>
+              </div>
+              <div style="background:#f5f5f5;border-radius:4px;padding:4px 8px;text-align:center">
+                <div style="font-size:13px;font-weight:700;color:#26a69a">${earn.beatCount}</div>
+                <div style="font-size:10px;color:#888">Beats</div>
+              </div>
+              <div style="background:#f5f5f5;border-radius:4px;padding:4px 8px;text-align:center">
+                <div style="font-size:13px;font-weight:700;color:#ef5350">${earn.missCount}</div>
+                <div style="font-size:10px;color:#888">Misses</div>
+              </div>
+            </div>
+            ${(earn.surprises||[]).slice(0,4).map(s=>{
+              const beat=s.actualEarningResult>=s.estimatedEarning;
+              return`<div class="earnings-item">
+                <span style="color:#888;font-size:11px">${(s.date||'').split('T')[0]}</span>
+                <span>EPS: <strong style="color:${beat?'#26a69a':'#ef5350'}">${parseFloat(s.actualEarningResult||0).toFixed(2)}</strong></span>
+                <span style="color:#bbb">est: ${parseFloat(s.estimatedEarning||0).toFixed(2)}</span>
+                <span class="beat-badge ${beat?'beat-yes':'beat-no'}">${beat?'BEAT':'MISS'}</span>
+              </div>`;}).join('')}`:''):
+        `<div class="pro-lock"><span>🔒</span><span style="color:#555;font-size:12px">Earnings requiere Plan Pro</span><button class="pro-lock-btn" onclick="checkout()">⭐ Upgrade</button></div>`}
+    </div>`;
+
+  // Noticias
+  const newsHtml=`
+    <div class="detail-section">
+      <div class="detail-section-title">📰 Noticias</div>
+      ${isPro()?
+        (earn.news?.length?
+          earn.news.map(n=>`<div class="news-item-row">
+            <a href="${n.url}" target="_blank" class="news-title">${n.title}</a>
+            <div class="news-meta">
+              <span>${new Date(n.date).toLocaleDateString('es-ES')}</span>
+              <span>${n.source}</span>
+              <span class="${n.sentiment==='positive'?'news-pos':n.sentiment==='negative'?'news-neg':'news-neu'}">${n.sentiment==='positive'?'📈':n.sentiment==='negative'?'📉':'➡️'} ${n.sentiment}</span>
+            </div>
+          </div>`).join(''):
+          '<div style="color:#bbb;font-size:12px">Cargando noticias...</div>'):
+        `<div class="pro-lock"><span>🔒</span><span style="color:#555;font-size:12px">Noticias requiere Plan Pro</span><button class="pro-lock-btn" onclick="checkout()">⭐ Upgrade</button></div>`}
+    </div>`;
+
+  return`<div class="detail-panel">${fundHtml}${scoreHtml}${driversHtml}${earningsHtml}${newsHtml}</div>`;
+}
+
+// ── TOGGLE ROW ────────────────────────────────────────────
+function toggleRow(ticker){
+  if(expandedRows.has(ticker)){expandedRows.delete(ticker);}
+  else{expandedRows.add(ticker);}
+  renderTable();
+  // Cargar datos del detalle si se expande
+  if(expandedRows.has(ticker)){
+    const d=cache[ticker];
+    if(d&&d.ok){
+      loadTFSignals(ticker,200);
+      loadEarningsAndScore(ticker);
+      if(isPro()){
+        loadDriversIA(ticker);
+      }
+    }
+  }
+}
+
+// ── EARNINGS TABLE ────────────────────────────────────────
+function renderEarningsTable(){
+  const tbody=document.getElementById('earningsBody');
+  const rows=tickers.map(t=>{
+    const d=cache[t];
+    const earn=d?.earnings;
+    const name=NAMES[t]||t;
+    if(!earn){
+      return`<tr><td><div class="stock-cell"><div style="width:24px;height:24px;border-radius:5px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">${EMOJIS[t]||'📊'}</div><div><strong>${name}</strong> <span style="color:#bbb">${t}</span></div></div></td><td colspan="6" style="color:#bbb;font-size:12px">Cargando...</td></tr>`;
+    }
+    const next=earn.upcoming?.[0];
+    const daysTo=next?Math.ceil((new Date(next.date)-new Date())/(1000*60*60*24)):null;
+    return`<tr>
+      <td><div class="stock-cell"><div style="width:24px;height:24px;border-radius:5px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">${EMOJIS[t]||'📊'}</div><div><strong>${name}</strong> <span style="color:#bbb">${t}</span></div></div></td>
+      <td>${next?new Date(next.date).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+      <td class="td-right">${daysTo!=null?`<span style="color:${daysTo<=7?'#ef5350':daysTo<=30?'#f57f17':'#26a69a'};font-weight:600">${daysTo===0?'HOY':daysTo===1?'MAÑANA':daysTo+' días'}</span>`:'—'}</td>
+      <td class="td-right">${next?.epsEstimated?'$'+parseFloat(next.epsEstimated).toFixed(2):'—'}</td>
+      <td class="td-right">${earn.beatRate!=null?`<span style="color:${earn.beatRate>=70?'#26a69a':earn.beatRate>=50?'#f57f17':'#ef5350'};font-weight:600">${earn.beatRate}%</span>`:'—'}</td>
+      <td class="td-right">${earn.beatCount!=null?`<span style="color:#26a69a">${earn.beatCount}B</span> / <span style="color:#ef5350">${earn.missCount}M</span>`:'—'}</td>
+      <td class="td-right">${earn.avgSurprise!=null?`<span style="color:${earn.avgSurprise>=0?'#26a69a':'#ef5350'};font-weight:600">${earn.avgSurprise>=0?'+':''}${earn.avgSurprise}%</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML=rows;
+}
+
+// ── FETCH ─────────────────────────────────────────────────
 async function fetchAll(){
   const btn=document.getElementById('refreshBtn');
-  btn.disabled=true;btn.textContent=lang==='es'?'⏳ Cargando...':'⏳ Loading...';
-  document.getElementById('lastUpdate').textContent=lang==='es'?'Descargando datos reales...':'Downloading real data...';
-  tickers.forEach(t=>{if(!cache[t])cache[t]={loading:true,chartTf:'1d',chartEma:200};});
-  renderAll();
+  if(loading){return;}
+  loading=true;
+  btn.disabled=true;btn.textContent='↻ Cargando...';
+  document.getElementById('lastUpdate').textContent='Descargando datos reales...';
+  tickers.forEach(t=>{if(!cache[t])cache[t]={loading:true};});
+  renderTable();
+
+  // Yahoo Finance en paralelo
   await Promise.all(tickers.map(async t=>{
     try{
       const r=await fetch(`/api/stock/${t}`,{headers:{Authorization:'Bearer '+token}});
       const d=await r.json();
-      cache[t]=d.ok?d:{error:d.error||'Sin datos'};
+      if(d.ok){cache[t]={...cache[t],...d};}
+      else{cache[t]={error:d.error};}
     }catch(e){cache[t]={error:e.message};}
   }));
-  renderAll();
-  if(isPro()){
-    await Promise.all(tickers.map(async t=>{
-      if(!cache[t]||cache[t].error)return;
-      try{
-        const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});
-        const ia=await r.json();
-        if(ia.upgrade){return;}
-        cache[t].ia=ia;
-      }catch(e){cache[t].ia={error:e.message};}
-      renderAll();
-    }));
-  }
-  // Cargar fundamentales reales de FMP en paralelo
+  renderTable();
+
+  // FMP Fundamentales
   await Promise.all(tickers.map(async t=>{
     if(!cache[t]||cache[t].error)return;
     try{
       const r=await fetch(`/api/fundamentals/${t}`,{headers:{Authorization:'Bearer '+token}});
       const d=await r.json();
-      if(d.ok) cache[t].fmp=d;
+      if(d.ok)cache[t].fmp=d;
     }catch(e){}
-    renderAll();
+    renderTable();
   }));
+
+  // Score + TF Signals en paralelo
+  await Promise.all(tickers.map(async t=>{
+    if(!cache[t]||cache[t].error)return;
+    try{
+      const [scoreResp,sigResp]=await Promise.all([
+        fetch(`/api/score/${t}`,{headers:{Authorization:'Bearer '+token}}),
+        fetch(`/api/signal/${t}?ema=200`,{headers:{Authorization:'Bearer '+token}}),
+      ]);
+      const sc=await scoreResp.json();
+      const sig=await sigResp.json();
+      if(sc.ok){cache[t].score=sc.score;cache[t].scoreData=sc;}
+      if(sig.ok)cache[t].tfSignals=sig.signals;
+    }catch(e){}
+    renderTable();
+  }));
+
+  // Earnings + Noticias (Pro only)
+  if(isPro()){
+    await Promise.all(tickers.map(async t=>{
+      if(!cache[t]||cache[t].error)return;
+      try{
+        const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});
+        const d=await r.json();
+        if(d.ok)cache[t].earnings=d;
+      }catch(e){}
+    }));
+    // Drivers IA
+    await Promise.all(tickers.map(async t=>{
+      if(!cache[t]||cache[t].error)return;
+      try{
+        const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});
+        const d=await r.json();
+        if(!d.upgrade)cache[t].ia=d;
+      }catch(e){}
+    }));
+    renderEarningsTable();
+  }
 
   // Guardar watchlist
   try{await fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}
-  document.getElementById('lastUpdate').textContent=(lang==='es'?'Actualizado: ':'Updated: ')+new Date().toLocaleTimeString('es-ES')+' · Yahoo Finance'+(isPro()?' + IA Claude':'');
-  btn.disabled=false;btn.textContent=lang==='es'?'↻ Actualizar':'↻ Refresh';
+
+  loading=false;
+  btn.disabled=false;btn.textContent='↻ Actualizar';
+  document.getElementById('lastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-ES')+' · Yahoo + FMP + IA';
+  renderTable();
+}
+
+async function loadTFSignals(ticker,ema){
+  try{
+    const r=await fetch(`/api/signal/${ticker}?ema=${ema}`,{headers:{Authorization:'Bearer '+token}});
+    const d=await r.json();
+    if(d.ok){cache[ticker].tfSignals=d.signals;renderTable();}
+  }catch(e){}
+}
+
+async function loadEarningsAndScore(ticker){
+  if(!isPro())return;
+  try{
+    const [earnResp,scResp]=await Promise.all([
+      fetch(`/api/earnings/${ticker}`,{headers:{Authorization:'Bearer '+token}}),
+      fetch(`/api/score/${ticker}`,{headers:{Authorization:'Bearer '+token}}),
+    ]);
+    const earn=await earnResp.json();
+    const sc=await scResp.json();
+    if(earn.ok)cache[ticker].earnings=earn;
+    if(sc.ok){cache[ticker].score=sc.score;cache[ticker].scoreData=sc;}
+    renderTable();
+    if(activeTab==='earnings')renderEarningsTable();
+  }catch(e){}
+}
+
+async function loadDriversIA(ticker){
+  try{
+    const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker,stockData:cache[ticker]})});
+    const d=await r.json();
+    if(!d.upgrade){cache[ticker].ia=d;renderTable();}
+  }catch(e){}
 }
 
 async function addTicker(){
   const inp=document.getElementById('newTicker');
   const t=inp.value.trim().toUpperCase();
   if(!t||tickers.includes(t)){inp.value='';return;}
-  const maxT=isPro()?50:5;
-  if(tickers.length>=maxT){
-    if(!isPro())checkout();
-    inp.value='';return;
-  }
-  tickers.push(t);cache[t]={loading:true};inp.value='';renderAll();
+  const max=isPro()?50:5;
+  if(tickers.length>=max){if(!isPro())checkout();inp.value='';return;}
+  tickers.push(t);
+  cache[t]={loading:true};
+  inp.value='';
+  renderTable();
   try{
     const r=await fetch(`/api/stock/${t}`,{headers:{Authorization:'Bearer '+token}});
     const d=await r.json();
-    cache[t]=d.ok?d:{error:d.error};
-    renderAll();
-    if(isPro()){
-      const ri=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});
-      cache[t].ia=await ri.json();
-      renderAll();
-    }
+    if(d.ok){cache[t]={...cache[t],...d};}else{cache[t]={error:d.error};}
+    renderTable();
+    // FMP + Score
+    const [fmpResp,scResp]=await Promise.all([
+      fetch(`/api/fundamentals/${t}`,{headers:{Authorization:'Bearer '+token}}),
+      fetch(`/api/score/${t}`,{headers:{Authorization:'Bearer '+token}}),
+      fetch(`/api/signal/${t}?ema=200`,{headers:{Authorization:'Bearer '+token}}),
+    ]);
+    const fmp=await fmpResp.json();const sc=await scResp.json();
+    if(fmp.ok)cache[t].fmp=fmp;
+    if(sc.ok){cache[t].score=sc.score;cache[t].scoreData=sc;}
+    renderTable();
     await fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});
-  }catch(e){cache[t]={error:e.message};renderAll();}
+  }catch(e){cache[t]={error:e.message};renderTable();}
 }
 
-function removeTicker(t){tickers=tickers.filter(x=>x!==t);delete cache[t];renderAll();try{fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}}
+function removeTicker(t){
+  tickers=tickers.filter(x=>x!==t);
+  delete cache[t];
+  expandedRows.delete(t);
+  renderTable();
+  try{fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}
+}
 
+// ── ALERTAS ───────────────────────────────────────────────
+async function saveAlerts(){
+  const enabled=document.getElementById('alertsEnabled').checked;
+  const dropAlert=parseFloat(document.getElementById('alertDrop').value)||5;
+  await fetch('/api/alerts/settings',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({enabled,dropAlert})});
+}
+async function saveWhatsApp(){
+  const phone=document.getElementById('waPhone').value.trim().replace(/[^0-9]/g,'');
+  const apikey=document.getElementById('waApiKey').value.trim();
+  const enabled=document.getElementById('waEnabled').checked;
+  if(!phone||!apikey){document.getElementById('waStatus').textContent='⚠️ Ingresa tu número y API key';return;}
+  await fetch('/api/alerts/whatsapp',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone,apikey,enabled})});
+  document.getElementById('waStatus').textContent='✅ Guardado';
+}
+async function testWhatsApp(){
+  await saveWhatsApp();
+  document.getElementById('waStatus').textContent='📱 Enviando...';
+  try{
+    const r=await fetch('/api/alerts/whatsapp/test',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
+    const d=await r.json();
+    document.getElementById('waStatus').textContent=d.ok?'✅ Mensaje enviado':'❌ Error — verifica número y API key';
+  }catch(e){document.getElementById('waStatus').textContent='Error: '+e.message;}
+}
+async function saveTelegram(){
+  const chatId=document.getElementById('tgChatId').value.trim();
+  const enabled=document.getElementById('tgEnabled').checked;
+  if(!chatId){document.getElementById('tgStatus').textContent='⚠️ Ingresa tu Chat ID';return;}
+  await fetch('/api/alerts/telegram',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({chatId,enabled})});
+  document.getElementById('tgStatus').textContent='✅ Guardado';
+}
+async function testTelegram(){
+  await saveTelegram();
+  document.getElementById('tgStatus').textContent='✈️ Enviando...';
+  try{
+    const r=await fetch('/api/alerts/telegram/test',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
+    const d=await r.json();
+    document.getElementById('tgStatus').textContent=d.ok?'✅ Mensaje enviado a Telegram':'❌ Error — verifica Chat ID';
+  }catch(e){document.getElementById('tgStatus').textContent='Error: '+e.message;}
+}
 async function loadAlertConfig(){
   try{
     const r=await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+token}});
@@ -943,206 +1097,14 @@ async function loadAlertConfig(){
   }catch(e){}
 }
 
-// ── RENDER SEÑALES MULTI-TF ───────────────────────────────
-function renderSignals(sigs, ema, lang) {
-  if (!sigs) return `<div style="color:#444;font-size:11px;grid-column:1/-1;text-align:center">${lang==='es'?'Cargando señales...':'Loading signals...'}</div>`;
-  const tfNames = {'1d': lang==='es'?'Diario':'Daily', '1wk': lang==='es'?'Semanal':'Weekly', '1mo': lang==='es'?'Mensual':'Monthly'};
-  const icons = {strong_bull:'🟢',bull:'🔼',bear:'🔽',strong_bear:'🔴',neutral:'⚪'};
-  const labels = {
-    strong_bull: lang==='es'?'CRUCE ALCISTA':'GOLDEN CROSS',
-    bull:        lang==='es'?'SOBRE EMA':'ABOVE EMA',
-    bear:        lang==='es'?'BAJO EMA':'BELOW EMA',
-    strong_bear: lang==='es'?'CRUCE BAJISTA':'DEATH CROSS',
-    neutral:     lang==='es'?'NEUTRAL':'NEUTRAL',
-  };
-  const colors = {strong_bull:'#00e676',bull:'#69f0ae',bear:'#ef9a9a',strong_bear:'#f44336',neutral:'#555'};
-  return ['1d','1wk','1mo'].map(tf => {
-    const s = sigs[tf];
-    if (!s || s.error) return `<div class="signal-tf neutral"><div class="signal-tf-name">${tfNames[tf]}</div><div class="signal-tf-icon">❓</div><div class="signal-tf-txt" style="color:#444">${lang==='es'?'Sin datos':'No data'}</div></div>`;
-    let sig = 'neutral';
-    if (s.trend==='above' && s.cross==='golden') sig='strong_bull';
-    else if (s.trend==='above') sig='bull';
-    else if (s.trend==='below' && s.cross==='death') sig='strong_bear';
-    else if (s.trend==='below') sig='bear';
-    const crossHtml = s.cross ? `<div class="signal-tf-cross ${s.cross==='golden'?'cross-golden':'cross-death'}">${s.cross==='golden'?'⚡ Golden Cross':'💀 Death Cross'}</div>` : '';
-    return `<div class="signal-tf ${sig}">
-      <div class="signal-tf-name">EMA${ema} ${tfNames[tf]}</div>
-      <div class="signal-tf-icon">${icons[sig]||'⚪'}</div>
-      <div class="signal-tf-txt" style="color:${colors[sig]}">${labels[sig]}</div>
-      <div class="signal-tf-diff">${s.diff>0?'+':''}${s.diff}%</div>
-      ${crossHtml}
-    </div>`;
-  }).join('');
-}
-
-// ── GRÁFICO ────────────────────────────────────────────────
-const chartInstances = {};
-
-async function loadChart(ticker) {
-  const emaPeriod = parseInt(document.getElementById('ema-'+ticker)?.value) || 200;
-  const tf = cache[ticker]?.chartTf || '1d';
-  const loadingEl = document.getElementById('chart-loading-'+ticker);
-  const chartEl   = document.getElementById('chart-'+ticker);
-  if (!loadingEl || !chartEl) return;
-  loadingEl.style.display = 'block';
-  chartEl.style.display   = 'none';
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    let d;
-    try {
-      const r = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${emaPeriod}`, {
-        headers:{Authorization:'Bearer '+token},
-        signal: controller.signal
-      });
-      d = await r.json();
-    } catch(fetchErr) {
-      if (loadingEl) loadingEl.textContent = '⚠️ Timeout — reintentando...';
-      // Reintentar una vez
-      try {
-        const r2 = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${emaPeriod}`, {
-          headers:{Authorization:'Bearer '+token}
-        });
-        d = await r2.json();
-      } catch(e2) {
-        if (loadingEl) loadingEl.textContent = '❌ Sin conexión';
-        return;
-      }
-    } finally {
-      clearTimeout(timeout);
-    }
-    if (!d || !d.ok || !d.candles?.length) {
-      if (loadingEl) loadingEl.textContent = '❌ Sin datos para este timeframe';
-      return;
-    }
-
-    // Destruir instancia anterior
-    if (chartInstances[ticker]) {
-      chartInstances[ticker].remove();
-      delete chartInstances[ticker];
-    }
-
-    loadingEl.style.display = 'none';
-    chartEl.style.display   = 'block';
-    chartEl.innerHTML       = '';
-
-    const isMobile = window.innerWidth <= 600;
-    const chart = LightweightCharts.createChart(chartEl, {
-      width:  chartEl.clientWidth || (isMobile ? window.innerWidth - 28 : 340),
-      height: isMobile ? 200 : 260,
-      layout: { background:{color:'#0d1117'}, textColor:'#e0e0e0' },
-      grid:   { vertLines:{color:'#1e2d40'}, horzLines:{color:'#1e2d40'} },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-      rightPriceScale: { borderColor:'#1e2d40' },
-      timeScale: { borderColor:'#1e2d40', timeVisible:true },
-    });
-    chartInstances[ticker] = chart;
-
-    // Velas
-    const candleSeries = chart.addCandlestickSeries({
-      upColor:'#00e676', downColor:'#f44336',
-      borderUpColor:'#00e676', borderDownColor:'#f44336',
-      wickUpColor:'#00e676', wickDownColor:'#f44336',
-    });
-
-    const candles = d.candles.map(c => ({
-      time: Math.floor(c.t/1000),
-      open: c.o, high: c.h, low: c.l, close: c.c
-    })).filter(c => c.open&&c.high&&c.low&&c.close);
-    candleSeries.setData(candles);
-
-    // EMA line
-    const emaColor = d.emaTrend === 'above' ? '#ffd700' : '#f44336';
-    const emaSeries = chart.addLineSeries({
-      color: emaColor, lineWidth: 2,
-      title: `EMA${emaPeriod}`,
-    });
-    const emaData = d.candles
-      .filter(c => c.ema != null)
-      .map(c => ({ time: Math.floor(c.t/1000), value: c.ema }));
-    emaSeries.setData(emaData);
-
-    // Volumen
-    const volSeries = chart.addHistogramSeries({
-      color:'rgba(100,100,100,0.3)', priceFormat:{type:'volume'},
-      priceScaleId:'vol', scaleMargins:{top:0.85,bottom:0}
-    });
-    const volData = d.candles
-      .filter(c => c.v != null)
-      .map(c => ({ time: Math.floor(c.t/1000), value: c.v,
-        color: c.c >= c.o ? 'rgba(0,230,118,0.3)' : 'rgba(244,67,54,0.3)' }));
-    volSeries.setData(volData);
-
-    chart.timeScale().fitContent();
-
-    // Actualizar señales TF
-    loadTFSignals(ticker, emaPeriod);
-    if (cache[ticker]) cache[ticker].chartEma = emaPeriod;
-
-  } catch(e) {
-    if (loadingEl) loadingEl.textContent = '❌ Error: '+e.message;
-  }
-}
-
-async function loadTFSignals(ticker, ema) {
-  try {
-    const r = await fetch(`/api/signal/${ticker}?ema=${ema}`, {
-      headers:{Authorization:'Bearer '+token}
-    });
-    const d = await r.json();
-    if (!d.ok) return;
-    const el = document.getElementById('sigsgrid-'+ticker);
-    if (el) el.innerHTML = renderSignals(d.signals, ema, lang);
-    if (cache[ticker]) cache[ticker].tfSignals = d.signals;
-  } catch(e) {}
-}
-
-function setChartTf(ticker, tf) {
-  if (cache[ticker]) cache[ticker].chartTf = tf;
-  // Actualizar botones
-  document.querySelectorAll(`#chart-${ticker}`).forEach(()=>{});
-  const controls = document.querySelector(`#card-${ticker} .chart-controls`);
-  if (controls) controls.querySelectorAll('.tf-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent === tf);
-  });
-  loadChart(ticker);
-}
-
-// Cargar graficos cuando se renderizan las cards
-function loadChartsForVisible() {
-  tickers.forEach((t, i) => {
-    if (cache[t] && cache[t].ok) {
-      // Escalonar la carga para no saturar Yahoo Finance
-      setTimeout(() => {
-        const el = document.getElementById('chart-'+t);
-        if (el) loadChart(t);
-      }, i * 500); // 500ms entre cada grafico
-    }
-  });
-}
-
-// ── INIT ───────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────
 document.getElementById('authEmail').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
 document.getElementById('authPassword').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
-
-// Resize charts on window resize
-let resizeTimer;
-window.addEventListener('resize',()=>{
-  clearTimeout(resizeTimer);
-  resizeTimer=setTimeout(()=>{
-    Object.keys(chartInstances).forEach(ticker=>{
-      const el=document.getElementById('chart-'+ticker);
-      if(el&&chartInstances[ticker]){
-        chartInstances[ticker].applyOptions({width:el.clientWidth});
-      }
-    });
-  },300);
-});
-
+document.getElementById('newTicker').addEventListener('keypress',e=>{if(e.key==='Enter')addTicker();});
 checkAuth();
-setInterval(()=>{if(userData)fetchAll();},10*60*1000);
+setInterval(()=>{if(userData&&!loading)fetchAll();},10*60*1000);
 </script>
 </body>
 </html>
+
 
