@@ -988,11 +988,34 @@ async function loadChart(ticker) {
   chartEl.style.display   = 'none';
 
   try {
-    const r = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${emaPeriod}`, {
-      headers:{Authorization:'Bearer '+token}
-    });
-    const d = await r.json();
-    if (!d.ok || !d.candles?.length) { loadingEl.textContent = '❌ Sin datos'; return; }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    let d;
+    try {
+      const r = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${emaPeriod}`, {
+        headers:{Authorization:'Bearer '+token},
+        signal: controller.signal
+      });
+      d = await r.json();
+    } catch(fetchErr) {
+      if (loadingEl) loadingEl.textContent = '⚠️ Timeout — reintentando...';
+      // Reintentar una vez
+      try {
+        const r2 = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${emaPeriod}`, {
+          headers:{Authorization:'Bearer '+token}
+        });
+        d = await r2.json();
+      } catch(e2) {
+        if (loadingEl) loadingEl.textContent = '❌ Sin conexión';
+        return;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (!d || !d.ok || !d.candles?.length) {
+      if (loadingEl) loadingEl.textContent = '❌ Sin datos para este timeframe';
+      return;
+    }
 
     // Destruir instancia anterior
     if (chartInstances[ticker]) {
@@ -1088,9 +1111,13 @@ function setChartTf(ticker, tf) {
 
 // Cargar graficos cuando se renderizan las cards
 function loadChartsForVisible() {
-  tickers.forEach(t => {
-    if (cache[t] && cache[t].ok && !chartInstances[t]) {
-      setTimeout(() => loadChart(t), 100);
+  tickers.forEach((t, i) => {
+    if (cache[t] && cache[t].ok) {
+      // Escalonar la carga para no saturar Yahoo Finance
+      setTimeout(() => {
+        const el = document.getElementById('chart-'+t);
+        if (el) loadChart(t);
+      }, i * 500); // 500ms entre cada grafico
     }
   });
 }
