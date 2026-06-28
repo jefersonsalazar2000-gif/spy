@@ -18,37 +18,35 @@ const TG_TOKEN       = process.env.TELEGRAM_BOT_TOKEN || '';
 const TG_CHAT_ID     = process.env.TELEGRAM_CHAT_ID   || '';
 const FMP_KEY        = process.env.FMP_API_KEY         || '';
 
-// ── DB SQLITE3 ────────────────────────────────────────────
-// ── TURSO DB ─────────────────────────────────────────────
-const db = createClient({
-  url:       process.env.TURSO_URL   || 'libsql://tradesmart-tradesmart.aws-us-east-1.turso.io',
-  authToken: process.env.TURSO_TOKEN || '',
+// ── SQLITE3 ───────────────────────────────────────────────
+const db = new sqlite3.Database('./tradesmart.db');
+
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    name TEXT,
+    plan TEXT DEFAULT 'free',
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    watchlist TEXT DEFAULT '["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","F"]',
+    alerts_enabled INTEGER DEFAULT 1,
+    drop_alert REAL DEFAULT 5.0,
+    whatsapp_phone TEXT,
+    whatsapp_apikey TEXT,
+    whatsapp_enabled INTEGER DEFAULT 0,
+    telegram_chat_id TEXT,
+    telegram_enabled INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    last_login TEXT
+  )`);
 });
 
-// Helper: adaptar API de Turso al mismo estilo que sqlite3
-const dbGet = async (sql, p=[]) => {
-  const r = await db.execute({sql, args: p});
-  if (!r.rows.length) return undefined;
-  const row = r.rows[0];
-  const obj = {};
-  r.columns.forEach((col,i) => obj[col] = row[i]);
-  return obj;
-};
-const dbAll = async (sql, p=[]) => {
-  const r = await db.execute({sql, args: p});
-  return r.rows.map(row => {
-    const obj = {};
-    r.columns.forEach((col,i) => obj[col] = row[i]);
-    return obj;
-  });
-};
-const dbRun = async (sql, p=[]) => {
-  const r = await db.execute({sql, args: p});
-  return { lastID: Number(r.lastInsertRowid), changes: r.rowsAffected };
-};
+const dbGet = (sql, p=[]) => new Promise((res,rej) => db.get(sql,p,(e,r)=>e?rej(e):res(r)));
+const dbAll = (sql, p=[]) => new Promise((res,rej) => db.all(sql,p,(e,r)=>e?rej(e):res(r)));
+const dbRun = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(e){e?rej(e):res({lastID:this.lastID,changes:this.changes})}));
 
-// Inicializar tabla
-async function initDB() {
   try {
     // Crear tabla con TODAS las columnas desde el inicio — no necesita migraciones
     await db.execute(`CREATE TABLE IF NOT EXISTS users (
