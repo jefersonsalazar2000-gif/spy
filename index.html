@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -645,7 +646,20 @@ function setTab(tab){
   document.getElementById('tabDash').style.display=tab==='dash'?'block':'none';
   document.getElementById('tabAlerts').style.display=tab==='alerts'?'block':'none';
   document.getElementById('tabEarnings').style.display=tab==='earnings'?'block':'none';
-  if(tab==='earnings')renderEarnings();
+  if(tab==='earnings'){
+    renderEarnings();
+    // Si no hay earnings cargados, cargarlos ahora
+    if(pro()){
+      tickers.forEach(async t=>{
+        if(!cache[t]?.ok||cache[t].earnings)return;
+        try{
+          const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});
+          const d=await r.json();
+          if(d.ok){cache[t].earnings=d;renderEarnings();}
+        }catch(e){}
+      });
+    }
+  }
 }
 
 // ── AUTH ──────────────────────────────────────────────────
@@ -1126,10 +1140,13 @@ async function fetchAll(){
       }catch(e){}
     });
     if(pro()){
-      tickers.forEach(async t=>{
+      // Cargar earnings para TODOS los tickers (necesario para la tabla Earnings)
+      await Promise.all(tickers.map(async t=>{
         if(!cache[t]?.ok)return;
-        try{const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(d.ok){cache[t].earnings=d;if(selectedTicker===t)renderCurrentSPTab();renderEarnings();}}catch(e){}
-      });
+        try{const r=await fetch(`/api/earnings/${t}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(d.ok){cache[t].earnings=d;if(selectedTicker===t)renderCurrentSPTab();}}catch(e){}
+      }));
+      renderEarnings();
+      tickers.forEach(async t=>{
       tickers.forEach(async t=>{
         if(!cache[t]?.ok)return;
         try{const r=await fetch('/api/drivers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({ticker:t,stockData:cache[t]})});const d=await r.json();if(!d.upgrade){cache[t].ia=d;if(selectedTicker===t&&spTab==='drivers')renderSPDrivers();}}catch(e){}
@@ -1223,4 +1240,3 @@ setInterval(()=>{if(userData&&!loading)fetchAll();},10*60*1000);
 </script>
 </body>
 </html>
-
