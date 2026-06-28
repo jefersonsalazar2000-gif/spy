@@ -235,6 +235,70 @@ tr:hover td{background:#fafbff}
 /* FOOTER */
 .footer{text-align:center;padding:16px;font-size:11px;color:#bbb;border-top:1px solid #e0e4eb;background:#fff}
 
+/* DARK MODE */
+body.dark{background:#0d1117;color:#e0e0e0}
+body.dark .nav{background:#161b22;border-color:#30363d}
+body.dark .nav-logo{color:#e0e0e0}
+body.dark .lang-btn{border-color:#30363d;color:#999;background:#161b22}
+body.dark .btn-login{border-color:#e84142;color:#e84142;background:transparent}
+body.dark .btn-logout{border-color:#30363d;color:#999;background:transparent}
+body.dark .controls-bar{background:#161b22;border-color:#30363d}
+body.dark .ctrl-input{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+body.dark .add-ticker-input{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+body.dark .add-ticker-input::placeholder{color:#444}
+body.dark .btn-add{background:#e0e0e0;color:#0d1117}
+body.dark .summary-bar{background:#161b22;border-color:#30363d}
+body.dark .sum-label{color:#555}
+body.dark .sum-val{color:#e0e0e0}
+body.dark .sum-update{color:#444}
+body.dark table{background:#161b22}
+body.dark thead{background:#0d1117;border-color:#30363d}
+body.dark th{color:#555}
+body.dark td{border-color:#21262d}
+body.dark tr:hover td{background:#1c2128}
+body.dark .stock-name{color:#e0e0e0}
+body.dark .stock-sector{color:#555}
+body.dark .footer{background:#161b22;border-color:#30363d;color:#555}
+body.dark .plan-card{background:#161b22;border-color:#30363d}
+body.dark .plan-name{color:#e0e0e0}
+body.dark .plan-price{color:#e0e0e0}
+body.dark .plan-desc{color:#555}
+body.dark .plan-features li{color:#aaa}
+body.dark .plan-features li.no{color:#444}
+body.dark .plan-btn-free{background:#21262d;color:#aaa}
+body.dark .landing h1{color:#e0e0e0}
+body.dark .landing p{color:#888}
+body.dark .stat-lbl{color:#555}
+body.dark .modal{background:#161b22;color:#e0e0e0}
+body.dark .modal h2{color:#e0e0e0}
+body.dark .modal p{color:#888}
+body.dark .form-group label{color:#999}
+body.dark .form-group input{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+body.dark .alerts-panel{background:#161b22;border-color:#30363d}
+body.dark .alerts-panel-title{color:#e0e0e0}
+body.dark .alert-section-title{color:#888}
+body.dark .alert-row label{color:#aaa}
+body.dark .alert-input{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+body.dark .alert-field{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+body.dark .wa-instructions{background:#0d2a20;border-color:#1a5c3a;color:#aaa}
+body.dark .tg-instructions{background:#0d1a2a;border-color:#1a3a5c;color:#aaa}
+body.dark .btn-save-alert{background:#e0e0e0;color:#0d1117}
+body.dark .btn-test-alert{background:#21262d;color:#aaa;border-color:#30363d}
+body.dark .detail-section{background:#0d1117;border-color:#30363d}
+body.dark .detail-section-title{color:#555}
+body.dark .fund-key{color:#555}
+body.dark .fund-val{color:#e0e0e0}
+body.dark .driver-txt{color:#ccc}
+body.dark .score-panel{background:#161b22;border-color:#30363d}
+body.dark .factor-lbl{color:#aaa}
+body.dark .nav-tab{color:#555}
+body.dark .nav-tab.active{color:#e84142}
+body.dark .nav-tab:hover{color:#e0e0e0}
+
+/* THEME BUTTON */
+.theme-btn{background:none;border:1px solid #e0e4eb;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:14px}
+body.dark .theme-btn{border-color:#30363d}
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .table-wrap{padding:10px}
@@ -292,6 +356,7 @@ tr:hover td{background:#fafbff}
   </div>
   <div class="nav-right">
     <button class="lang-btn" onclick="toggleLang()">🌐 ES/EN</button>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
     <div id="navGuest" style="display:flex;gap:6px">
       <button class="btn-login" onclick="openModal('login')">Entrar</button>
       <button class="btn-register" onclick="openModal('register')">Gratis</button>
@@ -641,7 +706,7 @@ function renderTable(){
     const expanded=expandedRows.has(t);
 
     if(!d||d.loading){
-      rows+=`<tr onclick="toggleRow('${t}')"><td colspan="15"><div style="display:flex;align-items:center;gap:8px;padding:4px 0"><div style="width:28px;height:28px;border-radius:6px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">${EMOJIS[t]||'📊'}</div><div><div style="font-weight:600">${NAMES[t]||t}</div><div class="sk" style="width:80px;height:10px;margin-top:3px"></div></div></div></td></tr>`;
+      rows+=`<tr><td><div class="stock-cell"><div style="width:28px;height:28px;border-radius:6px;background:${COLORS[t]||'#333'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">${EMOJIS[t]||'📊'}</div><div><div style="font-weight:600">${NAMES[t]||t} <span style="color:#bbb;font-weight:400">${t}</span></div><div class="sk" style="width:80px;height:8px;margin-top:3px;display:inline-block"></div></div></div></td><td class="td-right"><div class="sk" style="width:60px;height:14px;display:inline-block"></div></td><td colspan="13"><div class="sk" style="width:100%;height:14px;display:inline-block"></div></td></tr>`;
       return;
     }
     if(d.error){
@@ -1097,6 +1162,18 @@ async function loadAlertConfig(){
   }catch(e){}
 }
 
+// ── TEMA ─────────────────────────────────────────────────
+function toggleTheme(){
+  const isDark=document.body.classList.toggle('dark');
+  localStorage.setItem('ts_theme',isDark?'dark':'light');
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
+}
+// Aplicar tema guardado
+if(localStorage.getItem('ts_theme')==='dark'){
+  document.body.classList.add('dark');
+  document.getElementById('themeBtn').textContent='☀️';
+}
+
 // ── INIT ──────────────────────────────────────────────────
 document.getElementById('authEmail').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
 document.getElementById('authPassword').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
@@ -1106,5 +1183,4 @@ setInterval(()=>{if(userData&&!loading)fetchAll();},10*60*1000);
 </script>
 </body>
 </html>
-
 
