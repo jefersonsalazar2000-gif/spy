@@ -232,6 +232,18 @@ tr:hover td{background:#fafbff}
 .plan-btn-free{background:#f5f5f5;color:#555}
 .plan-btn-pro{background:#e84142;color:#fff}
 
+/* CHART */
+.chart-section-detail{background:#fff;border:1px solid #e0e4eb;border-radius:6px;padding:12px 14px}
+body.dark .chart-section-detail{background:#0d1117;border-color:#30363d}
+.chart-tf-row{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.chart-tf-btn{border:1px solid #e0e4eb;background:#f8f9fc;color:#666;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:500}
+.chart-tf-btn.active{background:#e84142;color:#fff;border-color:#e84142}
+body.dark .chart-tf-btn{background:#161b22;border-color:#30363d;color:#888}
+body.dark .chart-tf-btn.active{background:#e84142;color:#fff}
+.chart-ema-input{border:1px solid #e0e4eb;padding:3px 6px;border-radius:3px;font-size:11px;width:50px}
+body.dark .chart-ema-input{background:#0d1117;border-color:#30363d;color:#e0e0e0}
+.chart-container-detail{border-radius:4px;overflow:hidden}
+
 /* FOOTER */
 .footer{text-align:center;padding:16px;font-size:11px;color:#bbb;border-top:1px solid #e0e4eb;background:#fff}
 
@@ -316,6 +328,7 @@ body.dark .theme-btn{border-color:#30363d}
   .nav{padding-top:max(0px,env(safe-area-inset-top))}
 }
 </style>
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
@@ -914,7 +927,20 @@ function renderDetail(ticker,d,p){
         `<div class="pro-lock"><span>🔒</span><span style="color:#555;font-size:12px">Noticias requiere Plan Pro</span><button class="pro-lock-btn" onclick="checkout()">⭐ Upgrade</button></div>`}
     </div>`;
 
-  return`<div class="detail-panel">${fundHtml}${scoreHtml}${driversHtml}${earningsHtml}${newsHtml}</div>`;
+  const chartHtml=`
+    <div class="chart-section-detail" style="grid-column:1/-1">
+      <div class="detail-section-title">📊 Gráfico — EMA configurable</div>
+      <div class="chart-tf-row">
+        <span style="font-size:11px;color:#888">EMA:</span>
+        <input class="chart-ema-input" type="number" id="ema-${ticker}" value="200" min="5" max="500" onchange="reloadChart('${ticker}')">
+        ${['5m','15m','1h','1d','1wk','1mo'].map(tf=>`<button class="chart-tf-btn ${tf==='1d'?'active':''}" onclick="setChartTfDetail('${ticker}','${tf}',this)">${tf}</button>`).join('')}
+        <span id="chart-info-${ticker}" style="font-size:11px;color:#888;margin-left:8px"></span>
+      </div>
+      <div id="chart-detail-${ticker}" class="chart-container-detail" style="height:280px"></div>
+    </div>`;
+
+  setTimeout(()=>loadChartDetail('${ticker}','1d',200), 100);
+  return`<div class="detail-panel">${fundHtml}${scoreHtml}${driversHtml}${earningsHtml}${newsHtml}${chartHtml}</div>`;
 }
 
 // ── TOGGLE ROW ────────────────────────────────────────────
@@ -1168,6 +1194,96 @@ if(localStorage.getItem('ts_theme')==='dark'){
   document.getElementById('themeBtn').textContent='☀️';
 }
 
+// ── GRÁFICO DETALLE ───────────────────────────────────────
+const chartDetailInstances = {};
+
+async function loadChartDetail(ticker, tf, ema) {
+  const el = document.getElementById('chart-detail-'+ticker);
+  const infoEl = document.getElementById('chart-info-'+ticker);
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:12px">📊 Cargando gráfico...</div>';
+  try {
+    const r = await fetch(`/api/chart/${ticker}?tf=${tf}&ema=${ema}`, {headers:{Authorization:'Bearer '+token}});
+    const d = await r.json();
+    if (!d.ok || !d.candles?.length) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:12px">❌ Sin datos para este timeframe</div>';
+      return;
+    }
+    // Destruir instancia anterior
+    if (chartDetailInstances[ticker]) {
+      try{chartDetailInstances[ticker].remove();}catch(e){}
+      delete chartDetailInstances[ticker];
+    }
+    el.innerHTML = '';
+    const isDark = document.body.classList.contains('dark');
+    const chart = LightweightCharts.createChart(el, {
+      width: el.clientWidth || 600,
+      height: 280,
+      layout: { background:{color:isDark?'#0d1117':'#fff'}, textColor:isDark?'#e0e0e0':'#333' },
+      grid: { vertLines:{color:isDark?'#1e2d40':'#f0f3f7'}, horzLines:{color:isDark?'#1e2d40':'#f0f3f7'} },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      rightPriceScale: { borderColor: isDark?'#30363d':'#e0e4eb' },
+      timeScale: { borderColor: isDark?'#30363d':'#e0e4eb', timeVisible: true },
+    });
+    chartDetailInstances[ticker] = chart;
+
+    // Velas
+    const candleSeries = chart.addCandlestickSeries({
+      upColor:'#26a69a', downColor:'#ef5350',
+      borderUpColor:'#26a69a', borderDownColor:'#ef5350',
+      wickUpColor:'#26a69a', wickDownColor:'#ef5350',
+    });
+    const candles = d.candles.filter(c=>c.o&&c.h&&c.l&&c.c).map(c=>({
+      time: Math.floor(c.t/1000), open:c.o, high:c.h, low:c.l, close:c.c
+    }));
+    candleSeries.setData(candles);
+
+    // EMA line
+    const emaSeries = chart.addLineSeries({
+      color: d.emaTrend==='above'?'#f57f17':'#ef5350',
+      lineWidth: 2, title: `EMA${ema}`,
+    });
+    const emaData = d.candles.filter(c=>c.ema!=null).map(c=>({time:Math.floor(c.t/1000),value:c.ema}));
+    emaSeries.setData(emaData);
+
+    // Volumen
+    const volSeries = chart.addHistogramSeries({
+      priceFormat:{type:'volume'}, priceScaleId:'vol',
+      scaleMargins:{top:0.85,bottom:0}
+    });
+    const volData = d.candles.filter(c=>c.v!=null).map(c=>({
+      time:Math.floor(c.t/1000), value:c.v,
+      color:c.c>=c.o?'rgba(38,166,154,0.3)':'rgba(239,83,80,0.3)'
+    }));
+    volSeries.setData(volData);
+    chart.timeScale().fitContent();
+
+    // Info
+    if(infoEl) infoEl.textContent = `Precio: $${d.lastClose?.toFixed(2)} | EMA${ema}: $${d.lastEMA?.toFixed(2)} | ${d.emaTrend==='above'?'▲ Sobre EMA':'▼ Bajo EMA'} (${d.emaDiff>0?'+':''}${d.emaDiff}%)`;
+
+    // Resize
+    window.addEventListener('resize', ()=>{
+      if(chartDetailInstances[ticker]) chartDetailInstances[ticker].applyOptions({width:el.clientWidth});
+    });
+  } catch(e) {
+    if(el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:12px">❌ Error cargando gráfico</div>';
+  }
+}
+
+function reloadChart(ticker){
+  const ema=parseInt(document.getElementById('ema-'+ticker)?.value)||200;
+  const activeBtn=document.querySelector(`#chart-detail-${ticker}`)?.parentElement?.querySelector('.chart-tf-btn.active');
+  const tf=activeBtn?.textContent||'1d';
+  loadChartDetail(ticker,tf,ema);
+}
+
+function setChartTfDetail(ticker,tf,btn){
+  btn.closest('.chart-tf-row').querySelectorAll('.chart-tf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const ema=parseInt(document.getElementById('ema-'+ticker)?.value)||200;
+  loadChartDetail(ticker,tf,ema);
+}
+
 // ── INIT ──────────────────────────────────────────────────
 document.getElementById('authEmail').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
 document.getElementById('authPassword').addEventListener('keypress',e=>{if(e.key==='Enter')submitAuth();});
@@ -1177,4 +1293,5 @@ setInterval(()=>{if(userData&&!loading)fetchAll();},10*60*1000);
 </script>
 </body>
 </html>
+
 
