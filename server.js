@@ -5,7 +5,7 @@ const path       = require('path');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/http');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
