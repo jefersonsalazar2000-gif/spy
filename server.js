@@ -4,11 +4,13 @@ const cors    = require('cors');
 const path    = require('path');
 
 const app  = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Servir index.html desde la raiz (no desde /public)
+app.use(express.static(path.join(__dirname)));
 
 // ── YAHOO FINANCE ─────────────────────────────────────────
 app.get('/api/stock/:ticker', async (req, res) => {
@@ -38,7 +40,6 @@ app.get('/api/stock/:ticker', async (req, res) => {
     const mktCap    = meta.marketCap;
     const changeDay = ((price - prevClose) / prevClose) * 100;
 
-    // Tecnicos
     const max20    = Math.max(...closes.slice(-20));
     const dropPct  = ((max20 - price) / max20) * 100;
     const rsi      = calcRSI(closes, 14);
@@ -49,8 +50,6 @@ app.get('/api/stock/:ticker', async (req, res) => {
     const volNow   = volumes[volumes.length - 1] || 0;
     const volHigh  = volNow > vol20 * 1.5;
     const volRel   = vol20 > 0 ? volNow / vol20 : 1;
-
-    // Probabilidad rebote historica
     const rebProb  = calcReboundProb(closes, dropPct);
 
     res.json({
@@ -81,7 +80,7 @@ app.post('/api/drivers', async (req, res) => {
   const { ticker, stockData } = req.body;
   try {
     const prompt = `Eres analista financiero experto con datos actualizados a junio 2025.
-Para la acción ${ticker} (precio actual: $${stockData.price?.toFixed(2)}, caida desde max: ${stockData.dropFromHigh?.toFixed(1)}%) 
+Para la acción ${ticker} (precio actual: $${stockData.price?.toFixed(2)}, caida desde max: ${stockData.dropFromHigh?.toFixed(1)}%)
 responde SOLO con JSON puro sin markdown ni texto extra:
 {
   "revenue": "400B",
@@ -164,5 +163,5 @@ function calcReboundProb(closes, currentDrop) {
 
 app.listen(PORT, () => {
   console.log(`✅ Stock Analyzer Pro corriendo en http://localhost:${PORT}`);
-  console.log(`   JEFER85 | Las 7 Magnificas + SPY + Ford + Cualquier acción`);
+  console.log(`   JEFER85 | Las 7 Magnificas + SPY + Ford + Cualquier accion`);
 });
