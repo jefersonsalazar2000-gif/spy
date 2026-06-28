@@ -727,7 +727,38 @@ const probRel = dropFromHigh>=30 ? Math.max(0, reboundProb15-15)  // caida muy f
       <button class="pro-lock-btn" onclick="checkout()">${lang==='es'?'⭐ Desbloquear con Pro $9.99/mes':'⭐ Unlock with Pro $9.99/mo'}</button>
     </div>`;
 
-  const fundItems=[["P/E Trailing",fmtN(pe,1),peColor(pe)],["P/E Forward",fmtN(fwdPe,1),peColor(fwdPe)],["EPS (TTM)",fmtN(eps,2),eps>0?"#00e676":"#f44336"],["Market Cap",fmtCap(mktCap),"#ffd700"],[lang==='es'?"Dividendo":"Dividend",divYield?fmtN(divYield,2)+"%":"—",divYield>0?"#00e676":"#555"],["Beta",fmtN(beta,2),beta<1?"#00e676":beta<1.5?"#ffd700":"#f44336"],[lang==='es'?"Revenue":"Revenue",ia.revenue||"—","#ffd700"],[lang==='es'?"Margen neto":"Net margin",ia.margin?fmtN(ia.margin,1)+"%":"—",ia.margin>20?"#00e676":ia.margin>10?"#ffd700":"#f44336"],["ROE",ia.roe?fmtN(ia.roe,1)+"%":"—",ia.roe>20?"#00e676":ia.roe>10?"#ffd700":"#f44336"],[lang==='es'?"Deuda/Equity":"Debt/Equity",fmtN(ia.debtEquity,2),ia.debtEquity<0.5?"#00e676":ia.debtEquity<1.5?"#ffd700":"#f44336"],["EMA 200","$"+fmtN(ema200,2),trend?"#00e676":"#f44336"],["RSI 14",fmtN(rsi14,0),rsi14<=30?"#00e676":rsi14<=45?"#ffd700":rsi14<=70?"#888":"#f44336"]].map(([k,v,c])=>`<div class="fund-item"><span class="fund-key">${k}</span><span class="fund-val" style="color:${c}">${v}</span></div>`).join("");
+  // Usar FMP si disponible, sino Yahoo/IA
+  const fmp=d.fmp||{};
+  const realPe      = fmp.pe       || pe;
+  const realFwdPe   = fmp.fwdPe    || fwdPe;
+  const realEps     = fmp.eps      || eps;
+  const realMktCap  = fmp.mktCap   || mktCap;
+  const realDiv     = fmp.dividendYield || fmp.divYield || divYield;
+  const realBeta    = fmp.beta     || beta;
+  const realMargin  = fmp.margin   || ia.margin;
+  const realRoe     = fmp.roe      || ia.roe;
+  const realDebt    = fmp.debtEquity || ia.debtEquity;
+  const realRoa     = fmp.roa;
+  const realGross   = fmp.grossMargin;
+  const realCurrent = fmp.currentRatio;
+  const dataSource  = fmp.ok ? '🟢 FMP Real' : '🟡 Yahoo';
+
+  const fundItems=[
+    ["P/E Trailing",   fmtN(realPe,1),    peColor(realPe)],
+    ["P/E Forward",    fmtN(realFwdPe,1), peColor(realFwdPe)],
+    ["EPS (TTM)",      fmtN(realEps,2),   realEps>0?"#00e676":"#f44336"],
+    ["Market Cap",     fmtCap(realMktCap),"#ffd700"],
+    [lang==='es'?"Dividendo":"Dividend", realDiv?fmtN(realDiv,2)+"%":"—", realDiv>0?"#00e676":"#555"],
+    ["Beta",           fmtN(realBeta,2),  realBeta<1?"#00e676":realBeta<1.5?"#ffd700":"#f44336"],
+    [lang==='es'?"Margen neto":"Net margin", realMargin?fmtN(realMargin,1)+"%":"—", realMargin>20?"#00e676":realMargin>10?"#ffd700":"#f44336"],
+    ["ROE",            realRoe?fmtN(realRoe,1)+"%":"—", realRoe>20?"#00e676":realRoe>10?"#ffd700":"#f44336"],
+    [lang==='es'?"Margen bruto":"Gross margin", realGross?fmtN(realGross,1)+"%":"—", realGross>40?"#00e676":realGross>20?"#ffd700":"#f44336"],
+    ["ROA",            realRoa?fmtN(realRoa,1)+"%":"—", realRoa>10?"#00e676":realRoa>5?"#ffd700":"#f44336"],
+    [lang==='es'?"Deuda/Equity":"Debt/Equity", fmtN(realDebt,2), realDebt<0.5?"#00e676":realDebt<1.5?"#ffd700":"#f44336"],
+    [lang==='es'?"Ratio corriente":"Current ratio", fmtN(realCurrent,2), realCurrent>2?"#00e676":realCurrent>1?"#ffd700":"#f44336"],
+    ["EMA 200",        "$"+fmtN(ema200,2), trend?"#00e676":"#f44336"],
+    ["RSI 14",         fmtN(rsi14,0),     rsi14<=30?"#00e676":rsi14<=45?"#ffd700":rsi14<=70?"#888":"#f44336"],
+  ].map(([k,v,c])=>`<div class="fund-item"><span class="fund-key">${k}</span><span class="fund-val" style="color:${c}">${v}</span></div>`).join("");
 
   return`<div class="card ${s.cls}" id="card-${ticker}">
     <button class="remove-btn" onclick="removeTicker('${ticker}')">✕</button>
@@ -784,7 +815,10 @@ const probRel = dropFromHigh>=30 ? Math.max(0, reboundProb15-15)  // caida muy f
       </div>
 
       <div class="fund-section">
-        <div class="fund-title">📋 ${lang==='es'?'FUNDAMENTALES':'FUNDAMENTALS'}</div>
+        <div class="fund-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📋 ${lang==='es'?'FUNDAMENTALES':'FUNDAMENTALS'}</span>
+          <span style="font-size:9px;color:#555">${dataSource}</span>
+        </div>
         <div class="fund-grid">${fundItems}</div>
       </div>
 
@@ -851,6 +885,17 @@ async function fetchAll(){
       renderAll();
     }));
   }
+  // Cargar fundamentales reales de FMP en paralelo
+  await Promise.all(tickers.map(async t=>{
+    if(!cache[t]||cache[t].error)return;
+    try{
+      const r=await fetch(`/api/fundamentals/${t}`,{headers:{Authorization:'Bearer '+token}});
+      const d=await r.json();
+      if(d.ok) cache[t].fmp=d;
+    }catch(e){}
+    renderAll();
+  }));
+
   // Guardar watchlist
   try{await fetch('/api/watchlist',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({tickers})});}catch(e){}
   document.getElementById('lastUpdate').textContent=(lang==='es'?'Actualizado: ':'Updated: ')+new Date().toLocaleTimeString('es-ES')+' · Yahoo Finance'+(isPro()?' + IA Claude':'');
