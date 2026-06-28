@@ -247,14 +247,14 @@ app.post('/api/drivers', authMiddleware, proMiddleware, async (req, res) => {
   try {
     const prompt = `Eres analista financiero experto. Para ${ticker} (precio: $${stockData.price?.toFixed(2)}, caida: ${stockData.dropFromHigh?.toFixed(1)}%) responde SOLO JSON puro sin markdown:
 {"revenue":"400B","margin":25.0,"debtEquity":0.8,"roe":35.0,"drivers":[{"type":"bull","icon":"📈","text":"Driver alcista ESPECÍFICO de ${ticker}","strength":"Alto"},{"type":"bull","icon":"💰","text":"Segundo driver alcista de ${ticker}","strength":"Medio"},{"type":"bear","icon":"⚠️","text":"Riesgo bajista principal de ${ticker}","strength":"Alto"},{"type":"bear","icon":"📉","text":"Segundo riesgo de ${ticker}","strength":"Medio"},{"type":"neutral","icon":"⚖️","text":"Catalizador a vigilar en ${ticker}","strength":"Medio"}],"outlook":"COMPRA","outlookReason":"Razón específica en 1 frase para ${ticker}"}`;
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key': process.env.ANTHROPIC_API_KEY||''},
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:800, messages:[{role:'user',content:prompt}] }),
+      headers:{'Content-Type':'application/json','Authorization': 'Bearer '+(process.env.GROQ_API_KEY||'')},
+      body: JSON.stringify({ model:'llama-3.3-70b-versatile', max_tokens:800, messages:[{role:'user',content:prompt}] }),
       timeout: 30000
     });
     const data  = await resp.json();
-    const text  = data.content[0].text;
+    const text  = data.choices[0].message.content;
     const parsed= JSON.parse(text.replace(/```json|```/g,'').trim());
     res.json({ ok:true, ...parsed });
   } catch(e) {
