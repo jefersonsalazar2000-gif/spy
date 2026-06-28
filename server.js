@@ -249,10 +249,10 @@ app.get('/api/fundamentals/:ticker', authMiddleware, async (req, res) => {
   try {
     // Obtener perfil y ratios en paralelo
     const [profileResp, ratiosResp, metricsResp, quoteResp] = await Promise.all([
-      fetch(`https://financialmodelingprep.com/stable/profile?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
-      fetch(`https://financialmodelingprep.com/stable/ratios-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
-      fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
-      fetch(`https://financialmodelingprep.com/stable/quote?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 8000 }),
+      fetch(`https://financialmodelingprep.com/api/v3/profile/${ticker}?apikey=${FMP_KEY}`, { timeout: 10000 }),
+      fetch(`https://financialmodelingprep.com/api/v3/ratios-ttm/${ticker}&apikey=${FMP_KEY}`, { timeout: 10000 }),
+      fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 10000 }),
+      fetch(`https://financialmodelingprep.com/stable/quote?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 10000 }),
     ]);
 
     const profileData  = await profileResp.json();
@@ -277,20 +277,28 @@ app.get('/api/fundamentals/:ticker', authMiddleware, async (req, res) => {
       divYield:     p.lastDiv ? (p.lastDiv / p.price * 100) : null,
       employees:    p.fullTimeEmployees,
       // PE y EPS del quote (mas confiable)
-      pe:           q?.pe           || r?.peRatioTTM    || null,
-      eps:          q?.eps          || null,
-      fwdPe:        r?.priceEarningsToGrowthRatioTTM || null,
-      pbRatio:      r?.pbRatioTTM   || null,
-      debtEquity:   r?.debtEquityRatioTTM   || null,
-      roe:          r?.returnOnEquityTTM     ? r.returnOnEquityTTM * 100 : null,
-      roa:          r?.returnOnAssetsTTM     ? r.returnOnAssetsTTM * 100 : null,
-      margin:       r?.netProfitMarginTTM    ? r.netProfitMarginTTM * 100 : null,
-      grossMargin:  r?.grossProfitMarginTTM  ? r.grossProfitMarginTTM * 100 : null,
-      currentRatio: r?.currentRatioTTM       || null,
-      revenue:      m?.revenuePerShareTTM    || null,
-      evEbitda:     m?.evToEbitdaTTM         || null,
+      pe:           q?.pe            || r?.peRatioTTM    || null,
+      eps:          q?.eps           || r?.epsTTM        || null,
+      fwdPe:        q?.forwardPE     || null,
+      pbRatio:      r?.pbRatioTTM    || null,
+      debtEquity:   r?.debtEquityRatioTTM    || null,
+      roe:          r?.returnOnEquityTTM      ? r.returnOnEquityTTM * 100      : null,
+      roa:          r?.returnOnAssetsTTM      ? r.returnOnAssetsTTM * 100      : null,
+      margin:       r?.netProfitMarginTTM     ? r.netProfitMarginTTM * 100     : null,
+      grossMargin:  r?.grossProfitMarginTTM   ? r.grossProfitMarginTTM * 100   : null,
+      currentRatio: r?.currentRatioTTM        || null,
+      revenue:      m?.revenuePerShareTTM     || null,
+      evEbitda:     m?.evToEbitdaTTM          || null,
       fcf:          m?.freeCashFlowPerShareTTM || null,
-      dividendYield:m?.dividendYieldTTM      ? m.dividendYieldTTM * 100 : null,
+      // Dividendo — multiples fuentes
+      dividendYield: p?.dividendYield
+        ? p.dividendYield * 100
+        : m?.dividendYieldTTM
+        ? m.dividendYieldTTM * 100
+        : r?.dividendYieldTTM
+        ? r.dividendYieldTTM * 100
+        : q?.dividendYield || null,
+      dividendPerShare: p?.lastDiv || null,
     });
   } catch(e) {
     res.status(500).json({ ok: false, error: e.message });
@@ -545,6 +553,188 @@ function calcReboundProb(closes) {
     count: d5
   };
 }
+
+// ── EARNINGS Y NOTICIAS — FMP ────────────────────────────
+app.get('/api/earnings/:ticker', authMiddleware, async (req, res) => {
+  const { ticker } = req.params;
+  if (!FMP_KEY) return res.json({ ok: false, error: 'FMP no configurado' });
+  try {
+    // Earnings calendar + historial en paralelo
+    const [calResp, histResp, newsResp] = await Promise.all([
+      fetch(`https://financialmodelingprep.com/api/v3/earning_calendar?symbol=${ticker}&apikey=${FMP_KEY}`, { timeout: 10000 }),
+      fetch(`https://financialmodelingprep.com/api/v3/earnings-surprises/${ticker}?apikey=${FMP_KEY}&limit=8`, { timeout: 10000 }),
+      fetch(`https://financialmodelingprep.com/api/v4/stock_news?tickers=${ticker}&apikey=${FMP_KEY}&limit=5`, { timeout: 10000 }),
+    ]);
+
+    const calData  = await calResp.json();
+    const histData = await histResp.json();
+    const newsData = await newsResp.json();
+
+    // Proximo earnings
+    const now = Date.now();
+    const upcoming = Array.isArray(calData)
+      ? calData.filter(e => new Date(e.date) >= new Date()).slice(0, 3)
+      : [];
+    const lastEarnings = Array.isArray(calData)
+      ? calData.filter(e => new Date(e.date) < new Date()).slice(0, 1)[0]
+      : null;
+
+    // Historial de sorpresas
+    const surprises = Array.isArray(histData) ? histData.slice(0, 8) : [];
+
+    // Calcular reaccion promedio del precio tras earnings
+    let avgReaction = null;
+    let beatCount   = 0;
+    let missCount   = 0;
+    if (surprises.length > 0) {
+      const reactions = surprises
+        .filter(s => s.actualEarningResult != null && s.estimatedEarning != null)
+        .map(s => {
+          const surprise = ((s.actualEarningResult - s.estimatedEarning) / Math.abs(s.estimatedEarning || 1)) * 100;
+          if (s.actualEarningResult > s.estimatedEarning) beatCount++;
+          else missCount++;
+          return surprise;
+        });
+      avgReaction = reactions.length > 0
+        ? parseFloat((reactions.reduce((a,b) => a+b, 0) / reactions.length).toFixed(1))
+        : null;
+    }
+
+    const beatRate = surprises.length > 0
+      ? Math.round(beatCount / surprises.length * 100)
+      : null;
+
+    // Noticias
+    const news = Array.isArray(newsData)
+      ? newsData.slice(0, 5).map(n => ({
+          title:     n.title,
+          date:      n.publishedDate,
+          source:    n.site,
+          url:       n.url,
+          sentiment: n.sentiment || 'neutral',
+        }))
+      : [];
+
+    res.json({
+      ok: true, ticker,
+      upcoming,
+      lastEarnings,
+      surprises: surprises.slice(0, 6),
+      avgSurprise: avgReaction,
+      beatRate,
+      beatCount,
+      missCount,
+      news,
+    });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ── SCORE DE ENTRADA ─────────────────────────────────────
+app.get('/api/score/:ticker', authMiddleware, async (req, res) => {
+  const { ticker } = req.params;
+  try {
+    // Obtener datos del stock
+    const stockUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
+    const resp     = await fetch(stockUrl, { headers:{'User-Agent':'Mozilla/5.0'}, timeout: 10000 });
+    const json     = await resp.json();
+    if (!json.chart?.result?.length) return res.json({ ok:false, error:'Sin datos' });
+
+    const r      = json.chart.result[0];
+    const closes = r.indicators.quote[0].close.filter(v => v != null);
+    const price  = closes[closes.length - 1];
+
+    // EMA 200, 50 diario
+    const ema200d = calcEMA(closes, Math.min(200, closes.length - 1));
+    const ema50d  = calcEMA(closes, Math.min(50,  closes.length - 1));
+    const rsi     = calcRSI(closes, 14);
+    const max20   = Math.max(...closes.slice(-20));
+    const drop    = ((max20 - price) / max20) * 100;
+
+    // Calcular rebote historico
+    const rebProb = calcReboundProb(closes);
+    const probRel = drop >= 15 ? rebProb.p15 : drop >= 10 ? rebProb.p10 : rebProb.p5;
+
+    // Score de 0 a 100
+    let score = 0;
+    const factors = [];
+
+    // Factor 1: Caida (max 25 pts)
+    if (drop >= 5 && drop <= 15) {
+      score += 25;
+      factors.push({ label: `Caída ${drop.toFixed(1)}% zona ideal`, pts: 25, positive: true });
+    } else if (drop >= 15 && drop <= 25) {
+      score += 20;
+      factors.push({ label: `Caída fuerte ${drop.toFixed(1)}%`, pts: 20, positive: true });
+    } else if (drop > 25) {
+      score += 10;
+      factors.push({ label: `Caída extrema ${drop.toFixed(1)}%`, pts: 10, positive: false });
+    } else {
+      factors.push({ label: `Caída mínima ${drop.toFixed(1)}%`, pts: 0, positive: false });
+    }
+
+    // Factor 2: EMA200 diaria (max 20 pts)
+    if (price > ema200d) {
+      score += 20;
+      factors.push({ label: 'Sobre EMA200 diaria (tendencia alcista)', pts: 20, positive: true });
+    } else {
+      factors.push({ label: 'Bajo EMA200 diaria (tendencia bajista)', pts: 0, positive: false });
+    }
+
+    // Factor 3: EMA50 diaria (max 10 pts)
+    if (price > ema50d) {
+      score += 10;
+      factors.push({ label: 'Sobre EMA50 diaria', pts: 10, positive: true });
+    } else {
+      factors.push({ label: 'Bajo EMA50 diaria', pts: 0, positive: false });
+    }
+
+    // Factor 4: RSI (max 20 pts)
+    if (rsi <= 30) {
+      score += 20;
+      factors.push({ label: `RSI ${rsi.toFixed(0)} — Sobreventa extrema (compra)`, pts: 20, positive: true });
+    } else if (rsi <= 45) {
+      score += 15;
+      factors.push({ label: `RSI ${rsi.toFixed(0)} — Zona de compra`, pts: 15, positive: true });
+    } else if (rsi <= 60) {
+      score += 5;
+      factors.push({ label: `RSI ${rsi.toFixed(0)} — Neutral`, pts: 5, positive: null });
+    } else {
+      factors.push({ label: `RSI ${rsi.toFixed(0)} — Sobrecompra (evitar)`, pts: 0, positive: false });
+    }
+
+    // Factor 5: Probabilidad rebote histórico (max 25 pts)
+    const probPts = Math.round(probRel / 4);
+    score += probPts;
+    factors.push({ label: `Prob. rebote histórico ${probRel}%`, pts: probPts, positive: probRel >= 55 });
+
+    const recommendation =
+      score >= 75 ? 'COMPRA FUERTE' :
+      score >= 55 ? 'COMPRA' :
+      score >= 35 ? 'NEUTRAL — ESPERAR' :
+      'EVITAR';
+
+    const recColor =
+      score >= 75 ? '#00e676' :
+      score >= 55 ? '#69f0ae' :
+      score >= 35 ? '#ffd700' :
+      '#f44336';
+
+    res.json({
+      ok: true, ticker, score,
+      recommendation, recColor,
+      factors,
+      price, drop: parseFloat(drop.toFixed(1)),
+      rsi: parseFloat(rsi.toFixed(1)),
+      ema200d: parseFloat(ema200d.toFixed(4)),
+      ema50d:  parseFloat(ema50d.toFixed(4)),
+      probRel,
+    });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // ── ADMIN — activar Pro (solo con clave secreta) ─────────
 app.get('/api/admin/makepro', async (req, res) => {
