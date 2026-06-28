@@ -35,9 +35,22 @@ db.serialize(() => {
     whatsapp_phone TEXT,
     whatsapp_apikey TEXT,
     whatsapp_enabled INTEGER DEFAULT 0,
+    telegram_chat_id TEXT,
+    telegram_enabled INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now')),
     last_login TEXT
   )`);
+  // Migraciones — agregar columnas si no existen
+  const migrations = [
+    'ALTER TABLE users ADD COLUMN whatsapp_phone TEXT',
+    'ALTER TABLE users ADD COLUMN whatsapp_apikey TEXT',
+    'ALTER TABLE users ADD COLUMN whatsapp_enabled INTEGER DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN telegram_chat_id TEXT',
+    'ALTER TABLE users ADD COLUMN telegram_enabled INTEGER DEFAULT 0',
+  ];
+  migrations.forEach(sql => {
+    db.run(sql, err => {}); // Ignorar error si ya existe
+  });
 });
 
 // Helper: promisify db queries
@@ -484,4 +497,3 @@ app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
 });
-
