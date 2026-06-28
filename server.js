@@ -421,6 +421,32 @@ function calcReboundProb(closes) {
   };
 }
 
+// ── ADMIN — activar Pro (solo con clave secreta) ─────────
+app.get('/api/admin/makepro', async (req, res) => {
+  const { email, secret } = req.query;
+  if (secret !== (process.env.ADMIN_SECRET || 'jefer85admin2025')) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+  try {
+    const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    await dbRun('UPDATE users SET plan = "pro" WHERE email = ?', [email]);
+    res.json({ ok: true, message: `✅ ${email} ahora tiene Plan Pro` });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── ADMIN — ver todos los usuarios ───────────────────────
+app.get('/api/admin/users', async (req, res) => {
+  const { secret } = req.query;
+  if (secret !== (process.env.ADMIN_SECRET || 'jefer85admin2025')) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+  const users = await dbAll('SELECT id, email, name, plan, created_at, last_login FROM users', []);
+  res.json({ ok: true, total: users.length, users });
+});
+
 app.listen(PORT, () => {
   console.log(`✅ TradeSmart AI corriendo en http://localhost:${PORT}`);
   console.log(`   JEFER85 | SaaS | Pro: $9.99/mes`);
