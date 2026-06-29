@@ -286,7 +286,7 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
         </div>
         <input type="range" id="timeSlider" min="0" max="100" value="100"
           style="width:100%;accent-color:#e84142;cursor:pointer;height:8px;border-radius:4px"
-          oninput="onSliderChange(this.value)">
+          oninput="if(!isDraggingStrike)onSliderChange(this.value)">
         <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:4px">
           <span>0 días</span>
           <span id="sliderMid"></span>
@@ -768,8 +768,7 @@ function renderRuler() {
     const x   = toX(leg.strike);
     const clamp = Math.max(0, Math.min(W-50, x-25));
     html += `<div 
-      draggable="true"
-      ondragstart="startDragStrike(event,${i})"
+      onmousedown="startDragStrike(event,${i})"
       onclick="event.stopPropagation()"
       style="position:absolute;left:${clamp}px;top:30px;background:${col};color:#fff;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:700;cursor:grab;white-space:nowrap;user-select:none;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.5)"
       title="Arrastra para cambiar strike">
@@ -786,30 +785,37 @@ function renderRuler() {
 }
 
 let dragLegIdx = -1;
-function startDragStrike(e, i) {
-  dragLegIdx = i;
-  e.dataTransfer.effectAllowed = 'move';
-}
+let isDraggingStrike = false;
 
-function rulerHover(e) {
-  if (e.buttons !== 1 || dragLegIdx < 0) return;
+function startDragStrike(e, i) {
+  e.stopPropagation();
+  e.preventDefault();
+  dragLegIdx = i;
+  isDraggingStrike = true;
   const ruler = document.getElementById('strikeRuler');
   const p = getParams();
-  const S = p.S;
-  const range = S * 0.25;
-  const minS = S - range, maxS = S + range;
-  const rect = ruler.getBoundingClientRect();
-  const pct  = (e.clientX - rect.left) / rect.width;
-  const newStrike = Math.round(minS + pct * (maxS - minS));
-  if (newStrike !== legs[dragLegIdx].strike) {
-    legs[dragLegIdx].strike = Math.max(1, newStrike);
-    updateLegPremium(dragLegIdx);
+  const minS = p.S * 0.75, maxS = p.S * 1.25;
+  function onMove(ev) {
+    ev.stopPropagation();
+    const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    const rect = ruler.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const ns = Math.round(minS + pct * (maxS - minS));
+    if (ns !== legs[i].strike) { legs[i].strike = Math.max(1, ns); updateLegPremium(i); }
   }
+  function onUp(ev) {
+    ev.stopPropagation();
+    isDraggingStrike = false;
+    dragLegIdx = -1;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
 }
 
-function rulerLeave() {
-  dragLegIdx = -1;
-}
+function rulerHover(e) {}
+function rulerLeave() {}
 
 function updateLegPremium(i) {
   const p = getParams();
