@@ -184,32 +184,63 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
     <!-- Strategy description -->
     <div class="strat-desc" id="stratDesc"></div>
 
-    <!-- Key metrics estilo OptionStrat -->
-    <div style="display:flex;gap:0;background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden;margin-bottom:12px;flex-wrap:wrap">
-      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
-        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px" id="netCostLabel">NET CREDIT</div>
-        <div style="font-size:20px;font-weight:800;color:#ffd700" id="netCost">—</div>
-        <div style="font-size:10px;color:#555;margin-top:2px" id="netCostSub"></div>
+    <!-- Métricas completas estilo OptionStrat -->
+    <div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden;margin-bottom:12px">
+      <!-- Fila 1: métricas principales -->
+      <div style="display:flex;flex-wrap:wrap">
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;border-bottom:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px" id="netCostLabel">NET CREDIT</div>
+          <div style="font-size:20px;font-weight:900;color:#ffd700" id="netCost">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="netCostSub">—</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;border-bottom:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">MAX LOSS</div>
+          <div style="font-size:20px;font-weight:900;color:#ef5350" id="maxLoss">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="maxLossAt">—</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;border-bottom:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">MAX PROFIT</div>
+          <div style="font-size:20px;font-weight:900;color:#26a69a" id="maxProfit">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="maxProfitAt">—</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;border-bottom:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">CHANCE OF PROFIT</div>
+          <div style="font-size:20px;font-weight:900;color:#90caf9" id="chanceOfProfit">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px">Prob. estadística</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-bottom:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">BREAKEVEN(S)</div>
+          <div style="font-size:14px;font-weight:700;color:#fff" id="breakevens">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="breakevensAt">—</div>
+        </div>
       </div>
-      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
-        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">MAX LOSS</div>
-        <div style="font-size:20px;font-weight:800;color:#ef5350;display:flex;align-items:center;gap:4px"><span style="font-size:14px">▼</span><span id="maxLoss">—</span></div>
-        <div style="font-size:10px;color:#555;margin-top:2px" id="maxLossAt"></div>
-      </div>
-      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
-        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">MAX PROFIT</div>
-        <div style="font-size:20px;font-weight:800;color:#26a69a;display:flex;align-items:center;gap:4px"><span style="font-size:14px">▲</span><span id="maxProfit">—</span></div>
-        <div style="font-size:10px;color:#555;margin-top:2px" id="maxProfitAt"></div>
-      </div>
-      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
-        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">CHANCE OF PROFIT</div>
-        <div style="font-size:20px;font-weight:800;color:#90caf9" id="chanceOfProfit">—</div>
-        <div style="font-size:10px;color:#555;margin-top:2px">Probabilidad de ganancia</div>
-      </div>
-      <div style="flex:1;padding:12px 16px;min-width:120px">
-        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">BREAKEVEN(S)</div>
-        <div style="font-size:15px;font-weight:700;color:#fff" id="breakevens">—</div>
-        <div style="font-size:10px;color:#555;margin-top:2px" id="breakevensAt"></div>
+      <!-- Fila 2: colateral y riesgo/beneficio -->
+      <div style="display:flex;flex-wrap:wrap">
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">COLATERAL REQUERIDO</div>
+          <div style="font-size:18px;font-weight:900;color:#ff9800" id="collateral">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="collateralSub">—</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">RATIO RIESGO/BENEFICIO</div>
+          <div style="font-size:18px;font-weight:900;color:#e0e0e0" id="riskReward">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px" id="riskRewardSub">—</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">RETORNO S/ COLATERAL</div>
+          <div style="font-size:18px;font-weight:900;color:#26a69a" id="returnOnCollateral">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px">Si expira con ganancia max</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;border-right:1px solid #30363d;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">DECAY DIARIO (THETA)</div>
+          <div style="font-size:18px;font-weight:900" id="dailyTheta">—</div>
+          <div style="font-size:9px;color:#555;margin-top:2px">Por día que pasa</div>
+        </div>
+        <div style="flex:1;padding:12px 14px;min-width:110px">
+          <div style="font-size:9px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">ESTRATEGIA</div>
+          <div style="font-size:13px;font-weight:700;color:#e0e0e0" id="strategyName">—</div>
+          <div style="font-size:9px;margin-top:2px" id="strategyBias">—</div>
+        </div>
       </div>
     </div>
 
@@ -746,11 +777,112 @@ function calculate() {
 
   const isCredit = netCost < 0;
   document.getElementById('netCostLabel').textContent = isCredit ? 'NET CREDIT' : 'NET DEBIT';
-  document.getElementById('netCost').textContent = Math.abs(netCost) < 0.5 ? '~$0' : '$' + Math.abs(netCost).toFixed(0);
+  document.getElementById('netCost').textContent = Math.abs(netCost) < 0.5 ? '~$0' : '$' + Math.abs(netCost).toFixed(2);
   document.getElementById('netCost').style.color = isCredit ? '#ffd700' : '#90caf9';
-  document.getElementById('netCostSub').textContent = isCredit ? 'Crédito recibido' : 'Costo pagado';
+  document.getElementById('netCostSub').textContent = isCredit ? '✅ Cobras al abrir' : '💰 Pagas al abrir';
 
   document.getElementById('chanceOfProfit').textContent = cop.toFixed(1) + '%';
+
+  // ── COLATERAL ─────────────────────────────────────────────
+  // Calculado según el tipo de estrategia
+  let collateral = 0;
+  let collateralSub = '';
+  const hasShortCall = legs.some(l=>l.type==='call'&&l.pos==='short');
+  const hasShortPut  = legs.some(l=>l.type==='put' &&l.pos==='short');
+  const hasLongCall  = legs.some(l=>l.type==='call'&&l.pos==='long');
+  const hasLongPut   = legs.some(l=>l.type==='put' &&l.pos==='long');
+  const hasStock     = legs.some(l=>l.type==='stock');
+
+  if (hasShortCall && !hasLongCall && !hasStock) {
+    // Short call desnudo — colateral alto
+    collateral = p.S * 100 * 0.20; // 20% del valor de las acciones
+    collateralSub = '20% del valor (naked call)';
+  } else if (hasShortPut && !hasLongPut) {
+    // Short put — colateral = strike * 100
+    const shortPutLeg = legs.find(l=>l.type==='put'&&l.pos==='short');
+    collateral = (shortPutLeg?.strike||p.S) * 100 - (Math.abs(netCost));
+    collateralSub = 'Strike × 100 - crédito';
+  } else if (hasShortCall && hasLongCall) {
+    // Call spread — colateral = diferencia de strikes × 100
+    const sc = legs.find(l=>l.type==='call'&&l.pos==='short');
+    const lc = legs.find(l=>l.type==='call'&&l.pos==='long');
+    if (sc && lc) collateral = Math.abs(sc.strike - lc.strike) * 100;
+    collateralSub = 'Diferencia de strikes × 100';
+  } else if (hasShortPut && hasLongPut) {
+    // Put spread
+    const sp = legs.find(l=>l.type==='put'&&l.pos==='short');
+    const lp = legs.find(l=>l.type==='put'&&l.pos==='long');
+    if (sp && lp) collateral = Math.abs(sp.strike - lp.strike) * 100;
+    collateralSub = 'Diferencia de strikes × 100';
+  } else if (hasShortCall && hasShortPut && hasLongCall && hasLongPut) {
+    // Iron Condor / Iron Butterfly
+    const sc = legs.find(l=>l.type==='call'&&l.pos==='short');
+    const lc = legs.find(l=>l.type==='call'&&l.pos==='long');
+    const sp = legs.find(l=>l.type==='put'&&l.pos==='short');
+    const lp = legs.find(l=>l.type==='put'&&l.pos==='long');
+    const callSpread = sc&&lc ? Math.abs(sc.strike-lc.strike)*100 : 0;
+    const putSpread  = sp&&lp ? Math.abs(sp.strike-lp.strike)*100 : 0;
+    collateral = Math.max(callSpread, putSpread); // el mayor de los dos spreads
+    collateralSub = 'Max(call spread, put spread)';
+  } else if (hasLongCall && !hasShortCall) {
+    // Long call — solo la prima
+    collateral = Math.abs(netCost);
+    collateralSub = 'Prima pagada (riesgo total)';
+  } else if (hasLongPut && !hasShortPut) {
+    collateral = Math.abs(netCost);
+    collateralSub = 'Prima pagada (riesgo total)';
+  } else if (hasStock) {
+    const stockLeg = legs.find(l=>l.type==='stock');
+    collateral = (stockLeg?.premium||p.S) * stockLeg?.qty * 0.5;
+    collateralSub = '50% margen sobre acciones';
+  }
+  collateral = Math.max(0, collateral - (isCredit ? Math.abs(netCost) : 0));
+
+  document.getElementById('collateral').textContent = collateral > 0 ? '$'+collateral.toFixed(0) : 'N/A';
+  document.getElementById('collateralSub').textContent = collateralSub;
+
+  // ── RIESGO/BENEFICIO ──────────────────────────────────────
+  const absMaxLoss   = Math.abs(minPL);
+  const absMaxProfit = Math.abs(maxPL);
+  let rrText = '—', rrSub = '';
+  if (absMaxLoss > 0 && absMaxProfit < p.S * 50) {
+    const rr = absMaxProfit / absMaxLoss;
+    rrText = rr.toFixed(2) + 'x';
+    rrSub  = rr >= 1 ? '✅ Favorable' : rr >= 0.5 ? '⚠️ Moderado' : '❌ Desfavorable';
+  } else if (absMaxProfit >= p.S * 50) {
+    rrText = '∞';
+    rrSub  = '✅ Ilimitado';
+  }
+  document.getElementById('riskReward').textContent = rrText;
+  document.getElementById('riskRewardSub').textContent = rrSub;
+
+  // ── RETORNO SOBRE COLATERAL ───────────────────────────────
+  if (collateral > 0 && absMaxProfit < p.S * 50) {
+    const roc = (absMaxProfit / collateral * 100);
+    document.getElementById('returnOnCollateral').textContent = roc.toFixed(1) + '%';
+    document.getElementById('returnOnCollateral').style.color = roc >= 10 ? '#26a69a' : roc >= 5 ? '#f57f17' : '#ef5350';
+  } else {
+    document.getElementById('returnOnCollateral').textContent = absMaxProfit >= p.S*50 ? '∞' : '—';
+  }
+
+  // ── THETA DIARIO ──────────────────────────────────────────
+  let totTheta2 = 0;
+  legs.forEach(leg => {
+    if (leg.type === 'stock') return;
+    const bs = blackScholes(p.S, leg.strike, p.T, p.r, p.iv/100, p.q, leg.type);
+    const sign = leg.pos === 'long' ? 1 : -1;
+    totTheta2 += sign * bs.theta * leg.qty * 100;
+  });
+  document.getElementById('dailyTheta').textContent = (totTheta2 >= 0 ? '+$' : '-$') + Math.abs(totTheta2).toFixed(2);
+  document.getElementById('dailyTheta').style.color = totTheta2 >= 0 ? '#26a69a' : '#ef5350';
+
+  // ── NOMBRE Y SESGO ────────────────────────────────────────
+  const strat = STRATEGIES[currentStrategy];
+  document.getElementById('strategyName').textContent = strat?.name || 'Custom';
+  const bias = totTheta2 > 0 ? '🐻 Vendedor de tiempo' : hasLongCall && !hasShortCall ? '🐂 Alcista' : hasLongPut && !hasShortPut ? '🐻 Bajista' : hasShortCall && hasShortPut ? '😴 Neutral/Rango' : '⚡ Especulativo';
+  document.getElementById('strategyBias').textContent = bias;
+  document.getElementById('strategyBias').style.color = '#888';
+
   document.getElementById('currentPriceLabel').textContent = `Precio actual: $${p.S}`;
 
   // Chart
@@ -1123,14 +1255,58 @@ function drawChart(tPct) {
   cx.fillStyle='rgba(255,215,0,0.7)'; cx.font='bold 10px Arial'; cx.textAlign='left';
   cx.fillText('📅 '+tLabel, ml+4, mt+14);
 
-  // Tooltip
+  // Tooltip al pasar cursor — muestra P&L en tiempo real
   canvas.onmousemove = function(e) {
     const rect=canvas.getBoundingClientRect();
     const mx=e.clientX-rect.left;
-    const idx=Math.round((mx-ml)/cw*(pls.length-1));
-    if(idx<0||idx>=pls.length)return;
-    document.getElementById('currentPriceLabel').textContent=
-      'Precio: $'+prices[idx].toFixed(2)+' | P&L: $'+pls[idx].toFixed(2)+(isExpiry?'':' (teórico)');
+    const idx=Math.max(0,Math.min(pls.length-1,Math.round((mx-ml)/cw*(pls.length-1))));
+    if(mx<ml||mx>ml+cw)return;
+    const pl=pls[idx];
+    const pr=prices[idx];
+    const pct=((pr-p.S)/p.S*100).toFixed(1);
+    const netC=netCostFn();
+    const ret=netC!==0?(pl/Math.abs(netC)*100).toFixed(1):'∞';
+    const col=pl>=0?'#26a69a':'#ef5350';
+    document.getElementById('currentPriceLabel').innerHTML=
+      `Precio: <strong>$${pr.toFixed(2)}</strong> (${pct>=0?'+':''}${pct}%) &nbsp;|&nbsp; `+
+      `P&L: <strong style="color:${col}">${pl>=0?'+$':'-$'}${Math.abs(pl).toFixed(2)}</strong> &nbsp;|&nbsp; `+
+      `Retorno: <strong style="color:${col}">${ret}%</strong>`+
+      (isExpiry?'':' <span style="color:#555">(valor teórico)</span>');
+
+    // Dibujar línea vertical en cursor
+    cx.clearRect(ml+cw-1,mt,2,ch); // limpiar línea anterior
+    cx.beginPath();
+    cx.strokeStyle='rgba(255,255,255,0.3)';
+    cx.lineWidth=1;
+    cx.setLineDash([3,3]);
+    cx.moveTo(xScale(idx),mt);
+    cx.lineTo(xScale(idx),mt+ch);
+    cx.stroke();
+    cx.setLineDash([]);
+
+    // Punto en la línea
+    cx.beginPath();
+    cx.arc(xScale(idx),yScale(pl),4,0,Math.PI*2);
+    cx.fillStyle=col;
+    cx.fill();
+
+    // Tooltip box
+    const tlbl=`$${Math.abs(pl).toFixed(2)}`;
+    cx.font='bold 11px Arial';
+    const tw2=cx.measureText(tlbl).width+12;
+    let tx=xScale(idx)+8;
+    if(tx+tw2>W-mr)tx=xScale(idx)-tw2-8;
+    const ty=Math.max(mt+10,Math.min(yScale(pl)-20,mt+ch-30));
+    cx.fillStyle=col;
+    cx.beginPath();
+    cx.roundRect(tx,ty,tw2,22,4);
+    cx.fill();
+    cx.fillStyle='#fff';
+    cx.textAlign='left';
+    cx.fillText(tlbl,tx+6,ty+15);
+  };
+  canvas.onmouseleave=function(){
+    document.getElementById('currentPriceLabel').textContent='Pasa el cursor sobre el gráfico para ver valores';
   };
 
   return { prices, pls, breakevens };
