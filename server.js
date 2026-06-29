@@ -1,3 +1,4 @@
+
 const express    = require('express');
 const fetch      = require('node-fetch');
 const cors       = require('cors');
@@ -51,6 +52,12 @@ const dbRun = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(e){e
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rutas explícitas
+app.get('/options.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'options.html'));
+});
 
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
