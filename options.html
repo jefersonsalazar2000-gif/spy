@@ -225,6 +225,22 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
       <div class="chart-wrap" style="position:relative">
         <canvas id="plChart" style="display:block;width:100%;height:320px"></canvas>
       </div>
+      <!-- Slider de tiempo -->
+      <div style="padding:12px 0 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">FECHA</span>
+          <span style="font-size:12px;font-weight:700;color:#ffd700" id="sliderDateLabel">Al vencimiento</span>
+          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">DÍAS RESTANTES: <span id="sliderDaysLeft" style="color:#e0e0e0">0</span></span>
+        </div>
+        <input type="range" id="timeSlider" min="0" max="100" value="100"
+          style="width:100%;accent-color:#e84142;cursor:pointer;height:6px"
+          oninput="onSliderChange(this.value)">
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:3px">
+          <span>Hoy</span>
+          <span id="sliderMid"></span>
+          <span>Vencimiento</span>
+        </div>
+      </div>
     </div>
 
     <!-- Greeks -->
@@ -715,180 +731,18 @@ function calculate() {
   const colors = pls.map(pl => pl >= 0 ? 'rgba(38,166,154,0.7)' : 'rgba(239,83,80,0.7)');
   if (plChart) plChart.destroy();
   const ctx = document.getElementById('plChart').getContext('2d');
-  // ── CUSTOM CANVAS CHART estilo OptionStrat ────────────────
-  const canvas = document.getElementById('plChart');
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.clientWidth || 600;
-  const H = 320;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
-  const cx = canvas.getContext('2d');
-  cx.scale(dpr, dpr);
-
-  // Márgenes
-  const ml = 60, mr = 20, mt = 20, mb = 36;
-  const cw = W - ml - mr;
-  const ch = H - mt - mb;
-
-  // Escalas
-  const plMin = Math.min(...pls, 0);
-  const plMax = Math.max(...pls, 0);
-  const plRange = plMax - plMin || 1;
-  const xScale = i => ml + (i / (pls.length-1)) * cw;
-  const yScale = v => mt + ch - ((v - plMin) / plRange) * ch;
-  const y0 = yScale(0); // línea del cero
-
-  // Fondo
-  cx.fillStyle = '#161b22';
-  cx.fillRect(0, 0, W, H);
-
-  // Grid
-  cx.strokeStyle = 'rgba(255,255,255,0.04)';
-  cx.lineWidth = 1;
-  for (let i = 0; i <= 5; i++) {
-    const y = mt + (ch/5)*i;
-    cx.beginPath(); cx.moveTo(ml, y); cx.lineTo(ml+cw, y); cx.stroke();
-    const val = plMax - (plRange/5)*i;
-    cx.fillStyle = '#555'; cx.font = '10px Arial'; cx.textAlign = 'right';
-    cx.fillText('$'+val.toFixed(0), ml-6, y+4);
-  }
-
-  // Zona verde (profit)
-  const grad1 = cx.createLinearGradient(0, mt, 0, y0);
-  grad1.addColorStop(0, 'rgba(38,166,154,0.5)');
-  grad1.addColorStop(1, 'rgba(38,166,154,0.05)');
-  cx.beginPath();
-  cx.moveTo(xScale(0), y0);
-  pls.forEach((v,i) => { if(v >= 0) cx.lineTo(xScale(i), yScale(v)); else cx.lineTo(xScale(i), y0); });
-  cx.lineTo(xScale(pls.length-1), y0);
-  cx.closePath();
-  cx.fillStyle = grad1; cx.fill();
-
-  // Zona roja (loss)
-  const grad2 = cx.createLinearGradient(0, y0, 0, mt+ch);
-  grad2.addColorStop(0, 'rgba(239,83,80,0.05)');
-  grad2.addColorStop(1, 'rgba(239,83,80,0.5)');
-  cx.beginPath();
-  cx.moveTo(xScale(0), y0);
-  pls.forEach((v,i) => { if(v <= 0) cx.lineTo(xScale(i), yScale(v)); else cx.lineTo(xScale(i), y0); });
-  cx.lineTo(xScale(pls.length-1), y0);
-  cx.closePath();
-  cx.fillStyle = grad2; cx.fill();
-
-  // Línea del P&L
-  cx.beginPath();
-  cx.lineWidth = 2.5;
-  pls.forEach((v,i) => {
-    cx.strokeStyle = v >= 0 ? '#26a69a' : '#ef5350';
-    if(i === 0){ cx.moveTo(xScale(0), yScale(v)); return; }
-    const prev = pls[i-1];
-    if((prev >= 0) !== (v >= 0)){
-      // Cruce del cero
-      const ratio = Math.abs(prev)/(Math.abs(prev)+Math.abs(v));
-      const xCross = xScale(i-1+ratio);
-      cx.lineTo(xCross, y0); cx.stroke();
-      cx.beginPath(); cx.moveTo(xCross, y0);
-      cx.strokeStyle = v >= 0 ? '#26a69a' : '#ef5350';
-    }
-    cx.lineTo(xScale(i), yScale(v));
-  });
-  cx.stroke();
-
-  // Línea del cero
-  cx.beginPath();
-  cx.strokeStyle = 'rgba(255,255,255,0.2)';
-  cx.lineWidth = 1;
-  cx.setLineDash([4,4]);
-  cx.moveTo(ml, y0); cx.lineTo(ml+cw, y0);
-  cx.stroke(); cx.setLineDash([]);
-
-  // Strikes verticales + badges
-  const badgesEl = document.getElementById('strikeBadges');
-  badgesEl.innerHTML = '';
-  const usedStrikes = {};
-  legs.forEach((leg, i) => {
-    if (leg.type === 'stock') return;
-    if (usedStrikes[leg.strike]) return;
-    usedStrikes[leg.strike] = true;
-    const si = prices.findIndex(pr => Math.abs(pr-leg.strike) <= (maxP-minP)/prices.length*3);
-    if (si < 0) return;
-    const x = xScale(si);
-    const isLong = leg.pos === 'long';
-    const isCall = leg.type === 'call';
-    const col = isLong ? (isCall?'#26a69a':'#ef5350') : (isCall?'#ff9800':'#e91e63');
-    // Línea vertical
-    cx.beginPath();
-    cx.strokeStyle = col;
-    cx.lineWidth = 1.5;
-    cx.setLineDash([5,3]);
-    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
-    cx.stroke(); cx.setLineDash([]);
-    // Badge arriba
-    const badge = document.createElement('span');
-    badge.style.cssText = `background:${col};color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap`;
-    badge.textContent = `$${leg.strike} ${isLong?'BUY':'SELL'} ${leg.type.toUpperCase()}`;
-    badgesEl.appendChild(badge);
-  });
-
-  // Precio actual
-  const curSi = prices.findIndex(pr => Math.abs(pr-p.S) <= (maxP-minP)/prices.length*3);
-  if (curSi >= 0) {
-    const x = xScale(curSi);
-    cx.beginPath();
-    cx.strokeStyle = '#ffd700';
-    cx.lineWidth = 2;
-    cx.setLineDash([6,3]);
-    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
-    cx.stroke(); cx.setLineDash([]);
-    // Badge precio
-    cx.fillStyle = '#ffd700';
-    cx.font = 'bold 10px Arial';
-    cx.textAlign = 'center';
-    const lbl = '▲ $'+p.S.toFixed(0);
-    const tw = cx.measureText(lbl).width + 10;
-    cx.fillRect(x-tw/2, mt+2, tw, 16);
-    cx.fillStyle = '#000';
-    cx.fillText(lbl, x, mt+13);
-  }
-
-  // Breakeven
-  breakevens.forEach(be => {
-    const bsi = prices.findIndex(pr => Math.abs(pr-be) <= (maxP-minP)/prices.length*3);
-    if (bsi < 0) return;
-    const x = xScale(bsi);
-    cx.beginPath();
-    cx.strokeStyle = 'rgba(255,255,255,0.5)';
-    cx.lineWidth = 1;
-    cx.setLineDash([3,3]);
-    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
-    cx.stroke(); cx.setLineDash([]);
-    cx.fillStyle = 'rgba(255,255,255,0.15)';
-    cx.font = '9px Arial'; cx.textAlign = 'center';
-    const bw = cx.measureText('BE $'+be).width + 8;
-    cx.fillRect(x-bw/2, mt+ch-18, bw, 14);
-    cx.fillStyle = '#fff';
-    cx.fillText('BE $'+be, x, mt+ch-7);
-  });
-
-  // Eje X — etiquetas de precio
-  cx.fillStyle = '#555'; cx.font = '10px Arial'; cx.textAlign = 'center';
-  const step2 = Math.max(1, Math.floor(prices.length/10));
-  prices.forEach((pr, i) => {
-    if (i % step2 !== 0) return;
-    cx.fillText('$'+pr.toFixed(0), xScale(i), mt+ch+20);
-  });
-
-  // Tooltip on mousemove
-  canvas.onmousemove = function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left);
-    const idx = Math.round((mx - ml) / cw * (pls.length-1));
-    if (idx < 0 || idx >= pls.length) return;
-    document.getElementById('currentPriceLabel').textContent =
-      'Precio: $'+prices[idx].toFixed(2)+' | P&L: $'+pls[idx].toFixed(2);
-  };
+  // ── DIBUJAR GRÁFICO ────────────────────────────────────────
+  // Inicializar slider
+  const totalDays = p.days;
+  document.getElementById('timeSlider').max = 100;
+  document.getElementById('timeSlider').value = 100;
+  document.getElementById('sliderDaysLeft').textContent = totalDays;
+  document.getElementById('sliderDateLabel').textContent = 'Vencimiento';
+  const midDate = new Date(); midDate.setDate(midDate.getDate()+Math.round(totalDays/2));
+  document.getElementById('sliderMid').textContent = midDate.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  currentSliderPct = 1.0;
+  drawChart(1.0);
+  const canvas = document.getElementById('plChart'); // referencia para código siguiente
 
   // ── GREEKS
 
@@ -990,6 +844,218 @@ function resetAll() {
   document.getElementById('ticker').value = 'AAPL';
   setStrategy('long_call');
   document.querySelectorAll('.strat-btn')[0].classList.add('active');
+}
+
+// ── SLIDER DE TIEMPO ──────────────────────────────────────
+let currentSliderPct = 1.0; // 1.0 = vencimiento, 0.0 = hoy
+
+function onSliderChange(val) {
+  currentSliderPct = val / 100;
+  const p = getParams();
+  const totalDays = p.days;
+  const daysLeft = Math.round(currentSliderPct * totalDays);
+  const daysGone = totalDays - daysLeft;
+
+  document.getElementById('sliderDaysLeft').textContent = daysLeft;
+  if (daysLeft === 0) {
+    document.getElementById('sliderDateLabel').textContent = 'Al vencimiento';
+  } else if (daysLeft === totalDays) {
+    document.getElementById('sliderDateLabel').textContent = 'Hoy';
+  } else {
+    const d = new Date();
+    d.setDate(d.getDate() + daysGone);
+    document.getElementById('sliderDateLabel').textContent = d.toLocaleDateString('es-ES', {day:'numeric',month:'short'}) + ' (' + daysGone + 'd)';
+  }
+  drawChart(currentSliderPct);
+}
+
+function drawChart(tPct) {
+  const p = getParams();
+  const T_remaining = p.T * tPct; // tiempo restante
+  const isExpiry = tPct <= 0.01;
+
+  // Rango de precios
+  const range = p.S * 0.4;
+  const minP = Math.max(0.01, p.S - range);
+  const maxP = p.S + range;
+  const step = (maxP - minP) / 200;
+  const prices = [];
+  for (let pr = minP; pr <= maxP; pr += step) prices.push(+pr.toFixed(2));
+
+  // Calcular P&L para cada precio
+  const pls = prices.map(pr => {
+    return legs.reduce((sum, leg) => {
+      if (leg.type === 'stock') {
+        const sign = leg.pos === 'long' ? 1 : -1;
+        return sum + sign * (pr - leg.strike) * leg.qty;
+      }
+      let currentVal;
+      if (isExpiry || T_remaining <= 0) {
+        // Al vencimiento — valor intrínseco
+        currentVal = leg.type === 'call' ? Math.max(0, pr - leg.strike) : Math.max(0, leg.strike - pr);
+      } else {
+        // Valor teórico Black-Scholes con tiempo restante
+        const bs = blackScholes(pr, leg.strike, T_remaining, p.r, p.iv/100, p.q, leg.type);
+        currentVal = bs.price;
+      }
+      const sign = leg.pos === 'long' ? 1 : -1;
+      return sum + sign * (currentVal - leg.premium) * leg.qty * 100;
+    }, 0);
+  });
+
+  // Breakevens
+  const breakevens = [];
+  for (let i = 1; i < pls.length; i++) {
+    if ((pls[i-1] < 0 && pls[i] >= 0) || (pls[i-1] >= 0 && pls[i] < 0)) {
+      const be = prices[i-1] + (prices[i]-prices[i-1]) * Math.abs(pls[i-1]) / (Math.abs(pls[i-1])+Math.abs(pls[i]));
+      breakevens.push(+be.toFixed(2));
+    }
+  }
+
+  // Dibujar canvas
+  const canvas = document.getElementById('plChart');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth || 600;
+  const H = 320;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const cx = canvas.getContext('2d');
+  cx.scale(dpr, dpr);
+
+  const ml=60, mr=20, mt=20, mb=36;
+  const cw=W-ml-mr, ch=H-mt-mb;
+  const plMin=Math.min(...pls,0), plMax=Math.max(...pls,0);
+  const plRange=plMax-plMin||1;
+  const xScale = i => ml + (i/(pls.length-1))*cw;
+  const yScale = v => mt + ch - ((v-plMin)/plRange)*ch;
+  const y0 = yScale(0);
+
+  // Fondo
+  cx.fillStyle='#161b22'; cx.fillRect(0,0,W,H);
+
+  // Grid horizontal
+  cx.strokeStyle='rgba(255,255,255,0.04)'; cx.lineWidth=1;
+  for(let i=0;i<=5;i++){
+    const y=mt+(ch/5)*i;
+    cx.beginPath(); cx.moveTo(ml,y); cx.lineTo(ml+cw,y); cx.stroke();
+    const val=plMax-(plRange/5)*i;
+    cx.fillStyle='#555'; cx.font='10px Arial'; cx.textAlign='right';
+    cx.fillText('$'+val.toFixed(0), ml-6, y+4);
+  }
+
+  // Color según tiempo: al vencimiento = sólido, antes = más transparente
+  const alpha = 0.3 + tPct * 0.2;
+
+  // Zona verde
+  const grad1=cx.createLinearGradient(0,mt,0,y0);
+  grad1.addColorStop(0,`rgba(38,166,154,${alpha+0.2})`);
+  grad1.addColorStop(1,`rgba(38,166,154,0.02)`);
+  cx.beginPath(); cx.moveTo(xScale(0),y0);
+  pls.forEach((v,i)=>{ if(v>=0)cx.lineTo(xScale(i),yScale(v)); else cx.lineTo(xScale(i),y0); });
+  cx.lineTo(xScale(pls.length-1),y0); cx.closePath();
+  cx.fillStyle=grad1; cx.fill();
+
+  // Zona roja
+  const grad2=cx.createLinearGradient(0,y0,0,mt+ch);
+  grad2.addColorStop(0,`rgba(239,83,80,0.02)`);
+  grad2.addColorStop(1,`rgba(239,83,80,${alpha+0.2})`);
+  cx.beginPath(); cx.moveTo(xScale(0),y0);
+  pls.forEach((v,i)=>{ if(v<=0)cx.lineTo(xScale(i),yScale(v)); else cx.lineTo(xScale(i),y0); });
+  cx.lineTo(xScale(pls.length-1),y0); cx.closePath();
+  cx.fillStyle=grad2; cx.fill();
+
+  // Línea P&L
+  let started=false;
+  for(let i=0;i<pls.length;i++){
+    const v=pls[i]; const x=xScale(i); const y=yScale(v);
+    cx.strokeStyle=v>=0?'#26a69a':'#ef5350'; cx.lineWidth=2.5;
+    if(!started){ cx.beginPath(); cx.moveTo(x,y); started=true; continue; }
+    const prev=pls[i-1];
+    if((prev>=0)!==(v>=0)){
+      const ratio=Math.abs(prev)/(Math.abs(prev)+Math.abs(v));
+      const xc=xScale(i-1+ratio);
+      cx.lineTo(xc,y0); cx.stroke();
+      cx.beginPath(); cx.moveTo(xc,y0);
+      cx.strokeStyle=v>=0?'#26a69a':'#ef5350';
+    }
+    cx.lineTo(x,y);
+  }
+  cx.stroke();
+
+  // Línea cero
+  cx.beginPath(); cx.strokeStyle='rgba(255,255,255,0.15)'; cx.lineWidth=1;
+  cx.setLineDash([4,4]); cx.moveTo(ml,y0); cx.lineTo(ml+cw,y0); cx.stroke(); cx.setLineDash([]);
+
+  // Strikes + badges
+  const badgesEl=document.getElementById('strikeBadges');
+  badgesEl.innerHTML='';
+  const usedStrikes={};
+  legs.forEach((leg,i)=>{
+    if(leg.type==='stock')return;
+    if(usedStrikes[leg.strike])return;
+    usedStrikes[leg.strike]=true;
+    const si=prices.findIndex(pr=>Math.abs(pr-leg.strike)<=(maxP-minP)/prices.length*3);
+    if(si<0)return;
+    const x=xScale(si);
+    const isLong=leg.pos==='long', isCall=leg.type==='call';
+    const col=isLong?(isCall?'#26a69a':'#ef5350'):(isCall?'#ff9800':'#e91e63');
+    cx.beginPath(); cx.strokeStyle=col; cx.lineWidth=1.5;
+    cx.setLineDash([5,3]); cx.moveTo(x,mt); cx.lineTo(x,mt+ch); cx.stroke(); cx.setLineDash([]);
+    const badge=document.createElement('span');
+    badge.style.cssText=`background:${col};color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap`;
+    badge.textContent=`$${leg.strike} ${isLong?'BUY':'SELL'} ${leg.type.toUpperCase()}`;
+    badgesEl.appendChild(badge);
+  });
+
+  // Precio actual
+  const curSi=prices.findIndex(pr=>Math.abs(pr-p.S)<=(maxP-minP)/prices.length*3);
+  if(curSi>=0){
+    const x=xScale(curSi);
+    cx.beginPath(); cx.strokeStyle='#ffd700'; cx.lineWidth=2;
+    cx.setLineDash([6,3]); cx.moveTo(x,mt); cx.lineTo(x,mt+ch); cx.stroke(); cx.setLineDash([]);
+    const lbl='▲ $'+p.S.toFixed(0);
+    cx.font='bold 10px Arial'; cx.textAlign='center';
+    const tw=cx.measureText(lbl).width+10;
+    cx.fillStyle='#ffd700'; cx.fillRect(x-tw/2,mt+2,tw,16);
+    cx.fillStyle='#000'; cx.fillText(lbl,x,mt+13);
+  }
+
+  // Breakevens
+  breakevens.forEach(be=>{
+    const bsi=prices.findIndex(pr=>Math.abs(pr-be)<=(maxP-minP)/prices.length*3);
+    if(bsi<0)return;
+    const x=xScale(bsi);
+    cx.beginPath(); cx.strokeStyle='rgba(255,255,255,0.4)'; cx.lineWidth=1;
+    cx.setLineDash([3,3]); cx.moveTo(x,mt); cx.lineTo(x,mt+ch); cx.stroke(); cx.setLineDash([]);
+    cx.font='9px Arial'; cx.textAlign='center';
+    const bw=cx.measureText('BE $'+be.toFixed(0)).width+8;
+    cx.fillStyle='rgba(255,255,255,0.1)'; cx.fillRect(x-bw/2,mt+ch-18,bw,14);
+    cx.fillStyle='#fff'; cx.fillText('BE $'+be.toFixed(0),x,mt+ch-7);
+  });
+
+  // Eje X
+  cx.fillStyle='#555'; cx.font='10px Arial'; cx.textAlign='center';
+  const step2=Math.max(1,Math.floor(prices.length/10));
+  prices.forEach((pr,i)=>{ if(i%step2!==0)return; cx.fillText('$'+pr.toFixed(0),xScale(i),mt+ch+20); });
+
+  // Label tiempo
+  const tLabel = isExpiry ? 'Vencimiento' : `${Math.round((1-tPct)*p.days)}d pasados`;
+  cx.fillStyle='rgba(255,215,0,0.7)'; cx.font='bold 10px Arial'; cx.textAlign='left';
+  cx.fillText('📅 '+tLabel, ml+4, mt+14);
+
+  // Tooltip
+  canvas.onmousemove = function(e) {
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const idx=Math.round((mx-ml)/cw*(pls.length-1));
+    if(idx<0||idx>=pls.length)return;
+    document.getElementById('currentPriceLabel').textContent=
+      'Precio: $'+prices[idx].toFixed(2)+' | P&L: $'+pls[idx].toFixed(2)+(isExpiry?'':' (teórico)');
+  };
+
+  return { prices, pls, breakevens };
 }
 
 // ── INIT ──────────────────────────────────────────────────
