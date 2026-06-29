@@ -57,7 +57,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
 /* CHART */
 .chart-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
 .chart-title{font-size:12px;font-weight:600;color:#e0e0e0;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.chart-wrap{position:relative;height:280px}
+.chart-wrap{position:relative;height:320px}
 
 /* GREEKS */
 .greeks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -667,79 +667,142 @@ function calculate() {
   const colors = pls.map(pl => pl >= 0 ? 'rgba(38,166,154,0.7)' : 'rgba(239,83,80,0.7)');
   if (plChart) plChart.destroy();
   const ctx = document.getElementById('plChart').getContext('2d');
+  // Separar datos positivos y negativos para área rellena
+  const plsPos = pls.map(v => v >= 0 ? v : 0);
+  const plsNeg = pls.map(v => v <  0 ? v : 0);
+
   // Anotaciones de strikes
   const annotations = {};
   legs.forEach((leg, i) => {
     if (leg.type === 'stock') return;
-    const strikeIdx = prices.findIndex(pr => Math.abs(pr - leg.strike) < (maxP-minP)/100);
-    const color = leg.type==='call' ? '#26a69a' : '#ef5350';
-    const label = `${leg.pos==='long'?'BUY':'SELL'} ${leg.type.toUpperCase()} $${leg.strike}`;
+    const strikeIdx = prices.findIndex(pr => Math.abs(pr - leg.strike) <= (maxP-minP)/prices.length*2);
+    const isCall = leg.type === 'call';
+    const isLong = leg.pos === 'long';
+    const color = isLong ? (isCall ? '#26a69a' : '#ef5350') : (isCall ? '#ff9800' : '#e91e63');
+    const label = `${isLong?'BUY':'SELL'} ${leg.type.toUpperCase()} $${leg.strike}`;
     annotations['strike'+i] = {
       type: 'line',
       xMin: strikeIdx, xMax: strikeIdx,
       borderColor: color,
       borderWidth: 2,
-      borderDash: [5,3],
+      borderDash: [4,4],
       label: {
         display: true,
         content: label,
         position: 'start',
         backgroundColor: color,
         color: '#fff',
-        font: { size: 10, weight: 'bold' },
-        padding: 4,
-        borderRadius: 3,
+        font: { size: 9, weight: 'bold' },
+        padding: { x:5, y:3 },
+        borderRadius: 4,
+        yAdjust: -10,
       }
     };
   });
-  // Línea de precio actual
-  const currentIdx = prices.findIndex(pr => Math.abs(pr - p.S) < (maxP-minP)/100);
-  annotations['current'] = {
-    type: 'line',
-    xMin: currentIdx, xMax: currentIdx,
-    borderColor: '#ffd700',
-    borderWidth: 2,
-    label: {
-      display: true,
-      content: 'Precio $'+p.S.toFixed(0),
-      position: 'end',
-      backgroundColor: '#ffd700',
-      color: '#000',
-      font: { size: 10, weight: 'bold' },
-      padding: 4,
-      borderRadius: 3,
-    }
-  };
 
+  // Precio actual
+  const currentIdx = prices.findIndex(pr => Math.abs(pr - p.S) <= (maxP-minP)/prices.length*2);
+  if (currentIdx >= 0) {
+    annotations['current'] = {
+      type: 'line',
+      xMin: currentIdx, xMax: currentIdx,
+      borderColor: '#ffd700',
+      borderWidth: 2,
+      borderDash: [6,3],
+      label: {
+        display: true,
+        content: '▼ $'+p.S.toFixed(0),
+        position: 'start',
+        backgroundColor: '#ffd700',
+        color: '#000',
+        font: { size: 9, weight: 'bold' },
+        padding: { x:5, y:3 },
+        borderRadius: 4,
+      }
+    };
+  }
+
+  // Breakeven lines
+  breakevens.forEach((be, i) => {
+    const beIdx = prices.findIndex(pr => Math.abs(pr - be) <= (maxP-minP)/prices.length*2);
+    if (beIdx >= 0) {
+      annotations['be'+i] = {
+        type: 'line',
+        xMin: beIdx, xMax: beIdx,
+        borderColor: '#fff',
+        borderWidth: 1,
+        borderDash: [3,3],
+        label: {
+          display: true,
+          content: 'BE $'+be,
+          position: 'end',
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          color: '#fff',
+          font: { size: 8 },
+          padding: { x:4, y:2 },
+          borderRadius: 3,
+        }
+      };
+    }
+  });
+
+  if (plChart) plChart.destroy();
   plChart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: prices.map(p => '$'+p.toFixed(0)),
-      datasets: [{
-        label: 'P&L',
-        data: pls,
-        backgroundColor: colors,
-        borderWidth: 0,
-      }]
+      labels: prices.map(pr => '$'+pr.toFixed(0)),
+      datasets: [
+        {
+          label: 'Ganancia',
+          data: plsPos,
+          borderColor: '#26a69a',
+          backgroundColor: 'rgba(38,166,154,0.25)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+        {
+          label: 'Pérdida',
+          data: plsNeg,
+          borderColor: '#ef5350',
+          backgroundColor: 'rgba(239,83,80,0.25)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toFixed(2) } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = pls[ctx.dataIndex];
+              return ' P&L: $' + total.toFixed(2);
+            },
+            title: ctx => 'Precio: ' + ctx[0].label,
+          }
+        },
         annotation: { annotations }
       },
       scales: {
         x: {
-          ticks: { color:'#555', maxTicksLimit:10, maxRotation:0 },
-          grid: { color:'#21262d' }
+          ticks: { color:'#555', maxTicksLimit:12, maxRotation:0, font:{size:10} },
+          grid: { color:'rgba(255,255,255,0.05)' }
         },
         y: {
-          ticks: { color:'#888', callback: v => '$'+v.toFixed(0) },
-          grid: { color:'#21262d' }
+          ticks: { color:'#888', callback: v => '$'+v.toFixed(0), font:{size:10} },
+          grid: { color:'rgba(255,255,255,0.05)' }
         }
       },
-      animation: { duration: 200 }
+      animation: { duration: 300 }
     }
   });
 
