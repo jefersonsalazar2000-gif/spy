@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TradeSmart AI — Options Analyzer</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#0d1117;color:#e0e0e0;font-size:13px}
@@ -443,7 +444,7 @@ const STRATEGIES = {
   },
   iron_condor: {
     name: 'Iron Condor',
-    desc: '<strong>Iron Condor</strong> — Bull put spread + Bear call spread. Riesgo y ganancia limitados. Ganas si el precio se mantiene entre los strikes internos. La estrategia favorita de los vendedores de opciones.',
+    desc: '<strong>Iron Condor</strong> — Bull put spread + Bear call spread. <span style="color:#26a69a">✅ Ganas</span> si el precio se mantiene entre los strikes internos. <span style="color:#ef5350">❌ Pérdida</span> si el precio rompe fuera del rango. La estrategia favorita de los vendedores de opciones.',
     legs: (S,K,iv,T,r) => {
       const K1=+(K*0.92).toFixed(0), K2=+(K*0.97).toFixed(0), K3=+(K*1.03).toFixed(0), K4=+(K*1.08).toFixed(0);
       const p1=blackScholes(S,K1,T,r,iv/100,0,'put');
@@ -666,6 +667,50 @@ function calculate() {
   const colors = pls.map(pl => pl >= 0 ? 'rgba(38,166,154,0.7)' : 'rgba(239,83,80,0.7)');
   if (plChart) plChart.destroy();
   const ctx = document.getElementById('plChart').getContext('2d');
+  // Anotaciones de strikes
+  const annotations = {};
+  legs.forEach((leg, i) => {
+    if (leg.type === 'stock') return;
+    const strikeIdx = prices.findIndex(pr => Math.abs(pr - leg.strike) < (maxP-minP)/100);
+    const color = leg.type==='call' ? '#26a69a' : '#ef5350';
+    const label = `${leg.pos==='long'?'BUY':'SELL'} ${leg.type.toUpperCase()} $${leg.strike}`;
+    annotations['strike'+i] = {
+      type: 'line',
+      xMin: strikeIdx, xMax: strikeIdx,
+      borderColor: color,
+      borderWidth: 2,
+      borderDash: [5,3],
+      label: {
+        display: true,
+        content: label,
+        position: 'start',
+        backgroundColor: color,
+        color: '#fff',
+        font: { size: 10, weight: 'bold' },
+        padding: 4,
+        borderRadius: 3,
+      }
+    };
+  });
+  // Línea de precio actual
+  const currentIdx = prices.findIndex(pr => Math.abs(pr - p.S) < (maxP-minP)/100);
+  annotations['current'] = {
+    type: 'line',
+    xMin: currentIdx, xMax: currentIdx,
+    borderColor: '#ffd700',
+    borderWidth: 2,
+    label: {
+      display: true,
+      content: 'Precio $'+p.S.toFixed(0),
+      position: 'end',
+      backgroundColor: '#ffd700',
+      color: '#000',
+      font: { size: 10, weight: 'bold' },
+      padding: 4,
+      borderRadius: 3,
+    }
+  };
+
   plChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -681,7 +726,8 @@ function calculate() {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toFixed(2) } }
+        tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toFixed(2) } },
+        annotation: { annotations }
       },
       scales: {
         x: {
