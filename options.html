@@ -157,20 +157,15 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
     </div>
 
     <div class="s-section">
-      <div class="s-title">Piernas de la Estrategia</div>
-      <table class="legs-table">
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Strike</th>
-            <th>Cant.</th>
-            <th>Prima</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="legsBody"></tbody>
-      </table>
-      <button class="btn-add" onclick="addLeg()" style="width:100%;margin-top:4px">+ Agregar pierna</button>
+      <div class="s-title">Piernas — Arrastra los strikes</div>
+      <!-- Ruler visual de strikes arrastrables -->
+      <div style="margin-bottom:10px">
+        <div id="strikeRuler" style="position:relative;height:60px;background:#0d1117;border:1px solid #30363d;border-radius:6px;overflow:hidden;cursor:crosshair;margin-bottom:6px" onmousemove="rulerHover(event)" onmouseleave="rulerLeave()"></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#444" id="rulerLabels"></div>
+      </div>
+      <!-- Tabla de piernas compacta -->
+      <div id="legsCards"></div>
+      <button class="btn-add" onclick="addLeg()" style="width:100%;margin-top:6px;padding:6px">+ Agregar pierna</button>
     </div>
 
     <button class="btn-primary" onclick="calculate()">⚡ Calcular</button>
@@ -677,26 +672,143 @@ function removeLeg(i) {
   calculate();
 }
 
+function getLegColor(leg) {
+  if (leg.type==='stock') return '#ffd700';
+  const isLong=leg.pos==='long', isCall=leg.type==='call';
+  return isLong?(isCall?'#26a69a':'#ef5350'):(isCall?'#ff9800':'#e91e63');
+}
+
 function renderLegs() {
-  const tbody = document.getElementById('legsBody');
-  tbody.innerHTML = legs.map((leg,i) => `
-    <tr>
-      <td>
-        <select onchange="legs[${i}].type=this.value;legs[${i}].pos=this.value==='stock'?'long':legs[${i}].pos;updateLegPremium(${i})" style="background:#0d1117;border:1px solid #30363d;color:${leg.type==='call'?'#26a69a':leg.type==='put'?'#ef5350':'#ffd700'};padding:3px;border-radius:3px;font-size:10px">
+  // Cards de piernas
+  const p = getParams();
+  const S = p.S;
+  document.getElementById('legsCards').innerHTML = legs.map((leg,i) => {
+    const col = getLegColor(leg);
+    const bs  = leg.type!=='stock' ? blackScholes(S, leg.strike, p.T, p.r, p.iv/100, p.q, leg.type) : null;
+    const iv  = bs ? (bs.price>0 ? (p.iv).toFixed(0)+'%' : '—') : '—';
+    const delta = bs ? bs.delta.toFixed(2) : '—';
+    return `<div style="background:#0d1117;border:1px solid ${col}40;border-left:3px solid ${col};border-radius:5px;padding:8px 10px;margin-bottom:6px;position:relative">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+        <select onchange="legs[${i}].pos=this.value;updateLegPremium(${i})" style="background:${leg.pos==='long'?'#1a3a1a':'#3a1a1a'};border:1px solid ${col};color:${leg.pos==='long'?'#26a69a':'#ef5350'};padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer">
+          <option value="long" ${leg.pos==='long'?'selected':''}>BUY</option>
+          <option value="short" ${leg.pos==='short'?'selected':''}>SELL</option>
+        </select>
+        <select onchange="legs[${i}].type=this.value;updateLegPremium(${i})" style="background:#161b22;border:1px solid #30363d;color:#e0e0e0;padding:3px 8px;border-radius:3px;font-size:11px;cursor:pointer">
           <option value="call" ${leg.type==='call'?'selected':''}>CALL</option>
           <option value="put" ${leg.type==='put'?'selected':''}>PUT</option>
           <option value="stock" ${leg.type==='stock'?'selected':''}>STOCK</option>
         </select>
-        <select onchange="legs[${i}].pos=this.value;calculate()" style="background:#0d1117;border:1px solid #30363d;color:${leg.pos==='long'?'#26a69a':'#ef5350'};padding:3px;border-radius:3px;font-size:10px;margin-top:2px">
-          <option value="long" ${leg.pos==='long'?'selected':''}>LONG</option>
-          <option value="short" ${leg.pos==='short'?'selected':''}>SHORT</option>
-        </select>
-      </td>
-      <td><input type="number" value="${leg.strike}" step="1" onchange="legs[${i}].strike=+this.value;updateLegPremium(${i})" style="width:55px"></td>
-      <td><input type="number" value="${leg.qty}" step="1" min="1" onchange="legs[${i}].qty=+this.value;calculate()" style="width:35px"></td>
-      <td><input type="number" value="${leg.premium}" step="0.01" onchange="legs[${i}].premium=+this.value;calculate()" style="width:50px"></td>
-      <td><button class="btn-remove" onclick="removeLeg(${i})">✕</button></td>
-    </tr>`).join('');
+        <span style="color:${col};font-size:13px;font-weight:800">×${leg.qty}</span>
+        <button class="btn-remove" onclick="removeLeg(${i})" style="position:absolute;right:6px;top:6px">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:9px;color:#555;margin-bottom:2px">STRIKE</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button onclick="changeStrike(${i},-5)" style="background:#21262d;border:none;color:#aaa;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:11px">-5</button>
+            <button onclick="changeStrike(${i},-1)" style="background:#21262d;border:none;color:#aaa;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:11px">-1</button>
+            <input type="number" value="${leg.strike}" step="1" onchange="legs[${i}].strike=+this.value;updateLegPremium(${i})" style="background:#0d1117;border:1px solid ${col};color:${col};padding:4px 6px;border-radius:3px;font-size:13px;font-weight:700;width:68px;text-align:center">
+            <button onclick="changeStrike(${i},1)" style="background:#21262d;border:none;color:#aaa;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:11px">+1</button>
+            <button onclick="changeStrike(${i},5)" style="background:#21262d;border:none;color:#aaa;padding:2px 6px;border-radius:3px;cursor:pointer;font-size:11px">+5</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#555;margin-bottom:2px">PRIMA</div>
+          <input type="number" value="${leg.premium.toFixed(2)}" step="0.01" onchange="legs[${i}].premium=+this.value;calculate()" style="background:#0d1117;border:1px solid #30363d;color:#e0e0e0;padding:4px 6px;border-radius:3px;font-size:12px;width:64px;text-align:center">
+        </div>
+        <div>
+          <div style="font-size:9px;color:#555;margin-bottom:2px">CANT.</div>
+          <input type="number" value="${leg.qty}" step="1" min="1" onchange="legs[${i}].qty=+this.value;calculate()" style="background:#0d1117;border:1px solid #30363d;color:#e0e0e0;padding:4px 6px;border-radius:3px;font-size:12px;width:44px;text-align:center">
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;color:#555">
+        <span>Δ <strong style="color:#90caf9">${delta}</strong></span>
+        <span>IV <strong style="color:#aaa">${iv}</strong></span>
+        <span>${leg.type!=='stock'?(leg.strike<S?'OTM':'ITM'):''}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Ruler visual
+  renderRuler();
+}
+
+function changeStrike(i, delta) {
+  legs[i].strike = Math.max(1, legs[i].strike + delta);
+  updateLegPremium(i);
+}
+
+function renderRuler() {
+  const ruler = document.getElementById('strikeRuler');
+  const labels = document.getElementById('rulerLabels');
+  if (!ruler || !legs.length) return;
+  const p = getParams();
+  const S = p.S;
+  const range = S * 0.25;
+  const minS  = Math.floor(S - range);
+  const maxS  = Math.ceil(S + range);
+  const W     = ruler.clientWidth || 260;
+
+  const toX = v => ((v - minS) / (maxS - minS)) * W;
+
+  let html = '';
+
+  // Línea base
+  html += `<div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#30363d"></div>`;
+
+  // Precio actual
+  const sx = toX(S);
+  html += `<div style="position:absolute;top:8px;left:${sx}px;transform:translateX(-50%);font-size:9px;color:#ffd700;font-weight:700;white-space:nowrap">▼ $${S.toFixed(0)}</div>`;
+  html += `<div style="position:absolute;top:0;bottom:0;left:${sx}px;width:1px;background:#ffd70060"></div>`;
+
+  // Strikes de las piernas
+  legs.forEach((leg, i) => {
+    if (leg.type === 'stock') return;
+    const col = getLegColor(leg);
+    const x   = toX(leg.strike);
+    const clamp = Math.max(0, Math.min(W-50, x-25));
+    html += `<div 
+      draggable="true"
+      ondragstart="startDragStrike(event,${i})"
+      onclick="event.stopPropagation()"
+      style="position:absolute;left:${clamp}px;top:30px;background:${col};color:#fff;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:700;cursor:grab;white-space:nowrap;user-select:none;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.5)"
+      title="Arrastra para cambiar strike">
+      $${leg.strike} ${leg.pos==='long'?'B':'S'}${leg.type==='call'?'C':'P'}
+    </div>`;
+    html += `<div style="position:absolute;top:0;bottom:0;left:${x}px;width:1px;background:${col}80"></div>`;
+  });
+
+  // Labels del eje
+  ruler.innerHTML = html;
+  const steps = 5;
+  const stepSize = (maxS - minS) / steps;
+  labels.innerHTML = Array.from({length:steps+1},(_,i)=>`<span>$${(minS+stepSize*i).toFixed(0)}</span>`).join('');
+}
+
+let dragLegIdx = -1;
+function startDragStrike(e, i) {
+  dragLegIdx = i;
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function rulerHover(e) {
+  if (e.buttons !== 1 || dragLegIdx < 0) return;
+  const ruler = document.getElementById('strikeRuler');
+  const p = getParams();
+  const S = p.S;
+  const range = S * 0.25;
+  const minS = S - range, maxS = S + range;
+  const rect = ruler.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  const newStrike = Math.round(minS + pct * (maxS - minS));
+  if (newStrike !== legs[dragLegIdx].strike) {
+    legs[dragLegIdx].strike = Math.max(1, newStrike);
+    updateLegPremium(dragLegIdx);
+  }
+}
+
+function rulerLeave() {
+  dragLegIdx = -1;
 }
 
 function updateLegPremium(i) {
