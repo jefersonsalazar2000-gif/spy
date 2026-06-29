@@ -1367,58 +1367,54 @@ function drawChart(tPct) {
   cx.fillStyle='rgba(255,215,0,0.7)'; cx.font='bold 10px Arial'; cx.textAlign='left';
   cx.fillText('📅 '+tLabel, ml+4, mt+14);
 
-  // Tooltip al pasar cursor — muestra P&L en tiempo real
+  // Tooltip limpio — div flotante independiente del canvas
+  let tooltipDiv = document.getElementById('chartTooltip');
+  if (!tooltipDiv) {
+    tooltipDiv = document.createElement('div');
+    tooltipDiv.id = 'chartTooltip';
+    tooltipDiv.style.cssText = 'position:absolute;pointer-events:none;background:#1c2128;border:1px solid #30363d;border-radius:6px;padding:8px 12px;font-size:11px;display:none;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.5);min-width:160px';
+    canvas.parentElement.style.position = 'relative';
+    canvas.parentElement.appendChild(tooltipDiv);
+  }
+
+  // Guardar los datos del gráfico para el tooltip
+  canvas._chartData = { prices, pls, p, isExpiry, xScale, yScale, ml, cw, mt, ch };
+
   canvas.onmousemove = function(e) {
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const idx=Math.max(0,Math.min(pls.length-1,Math.round((mx-ml)/cw*(pls.length-1))));
-    if(mx<ml||mx>ml+cw)return;
-    const pl=pls[idx];
-    const pr=prices[idx];
-    const pct=((pr-p.S)/p.S*100).toFixed(1);
-    const netC=netCostFn();
-    const ret=netC!==0?(pl/Math.abs(netC)*100).toFixed(1):'∞';
-    const col=pl>=0?'#26a69a':'#ef5350';
-    document.getElementById('currentPriceLabel').innerHTML=
-      `Precio: <strong>$${pr.toFixed(2)}</strong> (${pct>=0?'+':''}${pct}%) &nbsp;|&nbsp; `+
-      `P&L: <strong style="color:${col}">${pl>=0?'+$':'-$'}${Math.abs(pl).toFixed(2)}</strong> &nbsp;|&nbsp; `+
-      `Retorno: <strong style="color:${col}">${ret}%</strong>`+
-      (isExpiry?'':' <span style="color:#555">(valor teórico)</span>');
+    const data = canvas._chartData;
+    if (!data) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    if (mx < data.ml || mx > data.ml + data.cw) { tooltipDiv.style.display='none'; return; }
+    const idx = Math.max(0, Math.min(data.prices.length-1, Math.round((mx-data.ml)/data.cw*(data.prices.length-1))));
+    const pl  = data.pls[idx];
+    const pr  = data.prices[idx];
+    const pct = ((pr - data.p.S) / data.p.S * 100).toFixed(1);
+    const netC= netCostFn();
+    const ret = netC !== 0 ? (pl/Math.abs(netC)*100).toFixed(1) : '∞';
+    const col = pl >= 0 ? '#26a69a' : '#ef5350';
 
-    // Dibujar línea vertical en cursor
-    cx.clearRect(ml+cw-1,mt,2,ch); // limpiar línea anterior
-    cx.beginPath();
-    cx.strokeStyle='rgba(255,255,255,0.3)';
-    cx.lineWidth=1;
-    cx.setLineDash([3,3]);
-    cx.moveTo(xScale(idx),mt);
-    cx.lineTo(xScale(idx),mt+ch);
-    cx.stroke();
-    cx.setLineDash([]);
+    // Posición del tooltip
+    let tx = e.clientX - rect.left + 12;
+    if (tx + 180 > rect.width) tx = e.clientX - rect.left - 175;
+    const ty = Math.max(0, e.clientY - rect.top - 50);
 
-    // Punto en la línea
-    cx.beginPath();
-    cx.arc(xScale(idx),yScale(pl),4,0,Math.PI*2);
-    cx.fillStyle=col;
-    cx.fill();
+    tooltipDiv.style.display = 'block';
+    tooltipDiv.style.left = tx + 'px';
+    tooltipDiv.style.top  = ty + 'px';
+    tooltipDiv.innerHTML  = `
+      <div style="color:#bbb;margin-bottom:4px">Precio: <strong style="color:#fff">$${pr.toFixed(2)}</strong> <span style="color:${pct>=0?'#26a69a':'#ef5350'}">(${pct>=0?'+':''}${pct}%)</span></div>
+      <div style="font-size:15px;font-weight:900;color:${col};margin-bottom:3px">${pl>=0?'+$':'-$'}${Math.abs(pl).toFixed(2)}</div>
+      <div style="color:#555;font-size:10px">Retorno: <span style="color:${col}">${ret}%</span>${data.isExpiry?'':' <em>(teórico)</em>'}</div>`;
 
-    // Tooltip box
-    const tlbl=`$${Math.abs(pl).toFixed(2)}`;
-    cx.font='bold 11px Arial';
-    const tw2=cx.measureText(tlbl).width+12;
-    let tx=xScale(idx)+8;
-    if(tx+tw2>W-mr)tx=xScale(idx)-tw2-8;
-    const ty=Math.max(mt+10,Math.min(yScale(pl)-20,mt+ch-30));
-    cx.fillStyle=col;
-    cx.beginPath();
-    cx.roundRect(tx,ty,tw2,22,4);
-    cx.fill();
-    cx.fillStyle='#fff';
-    cx.textAlign='left';
-    cx.fillText(tlbl,tx+6,ty+15);
+    // Actualizar label inferior
+    document.getElementById('currentPriceLabel').innerHTML =
+      `$${pr.toFixed(2)} → <strong style="color:${col}">${pl>=0?'+$':'-$'}${Math.abs(pl).toFixed(2)}</strong>`;
   };
-  canvas.onmouseleave=function(){
-    document.getElementById('currentPriceLabel').textContent='Pasa el cursor sobre el gráfico para ver valores';
+
+  canvas.onmouseleave = function() {
+    tooltipDiv.style.display = 'none';
+    document.getElementById('currentPriceLabel').textContent = 'Pasa el cursor por el gráfico';
   };
 
   return { prices, pls, breakevens };
