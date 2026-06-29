@@ -184,12 +184,33 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
     <!-- Strategy description -->
     <div class="strat-desc" id="stratDesc"></div>
 
-    <!-- Key metrics -->
-    <div class="metrics-grid">
-      <div class="metric"><div class="metric-label">Max Profit</div><div class="metric-value m-profit" id="maxProfit">—</div><div class="metric-sub" id="maxProfitAt"></div></div>
-      <div class="metric"><div class="metric-label">Max Loss</div><div class="metric-value m-loss" id="maxLoss">—</div><div class="metric-sub" id="maxLossAt"></div></div>
-      <div class="metric"><div class="metric-label">Breakeven(s)</div><div class="metric-value m-neutral" id="breakevens" style="font-size:13px">—</div></div>
-      <div class="metric"><div class="metric-label">Costo Neto / Crédito</div><div class="metric-value m-blue" id="netCost">—</div><div class="metric-sub" id="netCostSub"></div></div>
+    <!-- Key metrics estilo OptionStrat -->
+    <div style="display:flex;gap:0;background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden;margin-bottom:12px;flex-wrap:wrap">
+      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
+        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px" id="netCostLabel">NET CREDIT</div>
+        <div style="font-size:20px;font-weight:800;color:#ffd700" id="netCost">—</div>
+        <div style="font-size:10px;color:#555;margin-top:2px" id="netCostSub"></div>
+      </div>
+      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
+        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">MAX LOSS</div>
+        <div style="font-size:20px;font-weight:800;color:#ef5350;display:flex;align-items:center;gap:4px"><span style="font-size:14px">▼</span><span id="maxLoss">—</span></div>
+        <div style="font-size:10px;color:#555;margin-top:2px" id="maxLossAt"></div>
+      </div>
+      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
+        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">MAX PROFIT</div>
+        <div style="font-size:20px;font-weight:800;color:#26a69a;display:flex;align-items:center;gap:4px"><span style="font-size:14px">▲</span><span id="maxProfit">—</span></div>
+        <div style="font-size:10px;color:#555;margin-top:2px" id="maxProfitAt"></div>
+      </div>
+      <div style="flex:1;padding:12px 16px;border-right:1px solid #30363d;min-width:120px">
+        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">CHANCE OF PROFIT</div>
+        <div style="font-size:20px;font-weight:800;color:#90caf9" id="chanceOfProfit">—</div>
+        <div style="font-size:10px;color:#555;margin-top:2px">Probabilidad de ganancia</div>
+      </div>
+      <div style="flex:1;padding:12px 16px;min-width:120px">
+        <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">BREAKEVEN(S)</div>
+        <div style="font-size:15px;font-weight:700;color:#fff" id="breakevens">—</div>
+        <div style="font-size:10px;color:#555;margin-top:2px" id="breakevensAt"></div>
+      </div>
     </div>
 
     <!-- P&L Chart -->
@@ -198,7 +219,12 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
         <span>📊 Profit & Loss al Vencimiento</span>
         <span id="currentPriceLabel" style="font-size:11px;color:#555"></span>
       </div>
-      <div class="chart-wrap"><canvas id="plChart"></canvas></div>
+      <!-- Strike badges arriba -->
+      <div id="strikeBadges" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;min-height:28px"></div>
+      <!-- Gráfico canvas custom -->
+      <div class="chart-wrap" style="position:relative">
+        <canvas id="plChart" style="display:block;width:100%;height:320px"></canvas>
+      </div>
     </div>
 
     <!-- Greeks -->
@@ -647,166 +673,227 @@ function calculate() {
   // Net cost
   const netCost = netCostFn();
 
+  // Chance of Profit — % de precios en ganancia usando distribución log-normal
+  const sigma = (p.iv/100) * Math.sqrt(p.T);
+  let cop = 0;
+  if (breakevens.length === 0) {
+    cop = pls[0] > 0 ? 100 : 0;
+  } else if (breakevens.length === 1) {
+    const be = breakevens[0];
+    const d = (Math.log(be/p.S) - (-0.5*sigma*sigma)) / sigma;
+    cop = pls[pls.length-1] > 0 ? (1 - normalCDF(d))*100 : normalCDF(d)*100;
+  } else if (breakevens.length >= 2) {
+    const be1 = breakevens[0], be2 = breakevens[breakevens.length-1];
+    const d1 = (Math.log(be1/p.S) - (-0.5*sigma*sigma)) / sigma;
+    const d2 = (Math.log(be2/p.S) - (-0.5*sigma*sigma)) / sigma;
+    cop = (normalCDF(d2) - normalCDF(d1))*100;
+  }
+  cop = Math.max(0, Math.min(100, cop));
+
   // Update metrics
   const isUnlimited = maxPL > p.S * 50;
-  document.getElementById('maxProfit').textContent = isUnlimited ? 'ILIMITADO' : '$' + maxPL.toFixed(0);
-  document.getElementById('maxProfitAt').textContent = isUnlimited ? '' : 'en $' + prices[maxIdx]?.toFixed(2);
-  document.getElementById('maxProfit').className = 'metric-value m-profit';
+  document.getElementById('maxProfit').textContent = isUnlimited ? '∞' : '$' + maxPL.toFixed(0);
+  document.getElementById('maxProfitAt').textContent = isUnlimited ? 'Ilimitado' : 'en $' + prices[maxIdx]?.toFixed(2);
 
   const isUnlimitedLoss = minPL < -p.S * 50;
-  document.getElementById('maxLoss').textContent = isUnlimitedLoss ? 'ILIMITADO' : '$' + minPL.toFixed(0);
-  document.getElementById('maxLossAt').textContent = isUnlimitedLoss ? '' : 'en $' + prices[minIdx]?.toFixed(2);
-  document.getElementById('maxLoss').className = 'metric-value m-loss';
+  document.getElementById('maxLoss').textContent = isUnlimitedLoss ? '∞' : '$' + Math.abs(minPL).toFixed(0);
+  document.getElementById('maxLossAt').textContent = isUnlimitedLoss ? 'Ilimitado' : 'en $' + prices[minIdx]?.toFixed(2);
 
-  document.getElementById('breakevens').textContent = breakevens.length ? breakevens.map(b=>'$'+b).join(' / ') : 'Siempre rentable';
-  document.getElementById('netCost').textContent = Math.abs(netCost) < 1 ? '~$0' : (netCost > 0 ? '-$'+netCost.toFixed(0) : '+$'+Math.abs(netCost).toFixed(0));
-  document.getElementById('netCostSub').textContent = netCost > 0 ? 'Débito (coste)' : 'Crédito (ingreso)';
+  document.getElementById('breakevens').textContent = breakevens.length ? breakevens.map(b=>'$'+b).join(' · ') : '✅ Siempre';
+  document.getElementById('breakevensAt').textContent = breakevens.length === 2 ? `Rango: $${breakevens[0]} — $${breakevens[1]}` : '';
+
+  const isCredit = netCost < 0;
+  document.getElementById('netCostLabel').textContent = isCredit ? 'NET CREDIT' : 'NET DEBIT';
+  document.getElementById('netCost').textContent = Math.abs(netCost) < 0.5 ? '~$0' : '$' + Math.abs(netCost).toFixed(0);
+  document.getElementById('netCost').style.color = isCredit ? '#ffd700' : '#90caf9';
+  document.getElementById('netCostSub').textContent = isCredit ? 'Crédito recibido' : 'Costo pagado';
+
+  document.getElementById('chanceOfProfit').textContent = cop.toFixed(1) + '%';
   document.getElementById('currentPriceLabel').textContent = `Precio actual: $${p.S}`;
 
   // Chart
   const colors = pls.map(pl => pl >= 0 ? 'rgba(38,166,154,0.7)' : 'rgba(239,83,80,0.7)');
   if (plChart) plChart.destroy();
   const ctx = document.getElementById('plChart').getContext('2d');
-  // Separar datos positivos y negativos para área rellena
-  const plsPos = pls.map(v => v >= 0 ? v : 0);
-  const plsNeg = pls.map(v => v <  0 ? v : 0);
+  // ── CUSTOM CANVAS CHART estilo OptionStrat ────────────────
+  const canvas = document.getElementById('plChart');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth || 600;
+  const H = 320;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const cx = canvas.getContext('2d');
+  cx.scale(dpr, dpr);
 
-  // Anotaciones de strikes
-  const annotations = {};
+  // Márgenes
+  const ml = 60, mr = 20, mt = 20, mb = 36;
+  const cw = W - ml - mr;
+  const ch = H - mt - mb;
+
+  // Escalas
+  const plMin = Math.min(...pls, 0);
+  const plMax = Math.max(...pls, 0);
+  const plRange = plMax - plMin || 1;
+  const xScale = i => ml + (i / (pls.length-1)) * cw;
+  const yScale = v => mt + ch - ((v - plMin) / plRange) * ch;
+  const y0 = yScale(0); // línea del cero
+
+  // Fondo
+  cx.fillStyle = '#161b22';
+  cx.fillRect(0, 0, W, H);
+
+  // Grid
+  cx.strokeStyle = 'rgba(255,255,255,0.04)';
+  cx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = mt + (ch/5)*i;
+    cx.beginPath(); cx.moveTo(ml, y); cx.lineTo(ml+cw, y); cx.stroke();
+    const val = plMax - (plRange/5)*i;
+    cx.fillStyle = '#555'; cx.font = '10px Arial'; cx.textAlign = 'right';
+    cx.fillText('$'+val.toFixed(0), ml-6, y+4);
+  }
+
+  // Zona verde (profit)
+  const grad1 = cx.createLinearGradient(0, mt, 0, y0);
+  grad1.addColorStop(0, 'rgba(38,166,154,0.5)');
+  grad1.addColorStop(1, 'rgba(38,166,154,0.05)');
+  cx.beginPath();
+  cx.moveTo(xScale(0), y0);
+  pls.forEach((v,i) => { if(v >= 0) cx.lineTo(xScale(i), yScale(v)); else cx.lineTo(xScale(i), y0); });
+  cx.lineTo(xScale(pls.length-1), y0);
+  cx.closePath();
+  cx.fillStyle = grad1; cx.fill();
+
+  // Zona roja (loss)
+  const grad2 = cx.createLinearGradient(0, y0, 0, mt+ch);
+  grad2.addColorStop(0, 'rgba(239,83,80,0.05)');
+  grad2.addColorStop(1, 'rgba(239,83,80,0.5)');
+  cx.beginPath();
+  cx.moveTo(xScale(0), y0);
+  pls.forEach((v,i) => { if(v <= 0) cx.lineTo(xScale(i), yScale(v)); else cx.lineTo(xScale(i), y0); });
+  cx.lineTo(xScale(pls.length-1), y0);
+  cx.closePath();
+  cx.fillStyle = grad2; cx.fill();
+
+  // Línea del P&L
+  cx.beginPath();
+  cx.lineWidth = 2.5;
+  pls.forEach((v,i) => {
+    cx.strokeStyle = v >= 0 ? '#26a69a' : '#ef5350';
+    if(i === 0){ cx.moveTo(xScale(0), yScale(v)); return; }
+    const prev = pls[i-1];
+    if((prev >= 0) !== (v >= 0)){
+      // Cruce del cero
+      const ratio = Math.abs(prev)/(Math.abs(prev)+Math.abs(v));
+      const xCross = xScale(i-1+ratio);
+      cx.lineTo(xCross, y0); cx.stroke();
+      cx.beginPath(); cx.moveTo(xCross, y0);
+      cx.strokeStyle = v >= 0 ? '#26a69a' : '#ef5350';
+    }
+    cx.lineTo(xScale(i), yScale(v));
+  });
+  cx.stroke();
+
+  // Línea del cero
+  cx.beginPath();
+  cx.strokeStyle = 'rgba(255,255,255,0.2)';
+  cx.lineWidth = 1;
+  cx.setLineDash([4,4]);
+  cx.moveTo(ml, y0); cx.lineTo(ml+cw, y0);
+  cx.stroke(); cx.setLineDash([]);
+
+  // Strikes verticales + badges
+  const badgesEl = document.getElementById('strikeBadges');
+  badgesEl.innerHTML = '';
+  const usedStrikes = {};
   legs.forEach((leg, i) => {
     if (leg.type === 'stock') return;
-    const strikeIdx = prices.findIndex(pr => Math.abs(pr - leg.strike) <= (maxP-minP)/prices.length*2);
-    const isCall = leg.type === 'call';
+    if (usedStrikes[leg.strike]) return;
+    usedStrikes[leg.strike] = true;
+    const si = prices.findIndex(pr => Math.abs(pr-leg.strike) <= (maxP-minP)/prices.length*3);
+    if (si < 0) return;
+    const x = xScale(si);
     const isLong = leg.pos === 'long';
-    const color = isLong ? (isCall ? '#26a69a' : '#ef5350') : (isCall ? '#ff9800' : '#e91e63');
-    const label = `${isLong?'BUY':'SELL'} ${leg.type.toUpperCase()} $${leg.strike}`;
-    annotations['strike'+i] = {
-      type: 'line',
-      xMin: strikeIdx, xMax: strikeIdx,
-      borderColor: color,
-      borderWidth: 2,
-      borderDash: [4,4],
-      label: {
-        display: true,
-        content: label,
-        position: 'start',
-        backgroundColor: color,
-        color: '#fff',
-        font: { size: 9, weight: 'bold' },
-        padding: { x:5, y:3 },
-        borderRadius: 4,
-        yAdjust: -10,
-      }
-    };
+    const isCall = leg.type === 'call';
+    const col = isLong ? (isCall?'#26a69a':'#ef5350') : (isCall?'#ff9800':'#e91e63');
+    // Línea vertical
+    cx.beginPath();
+    cx.strokeStyle = col;
+    cx.lineWidth = 1.5;
+    cx.setLineDash([5,3]);
+    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
+    cx.stroke(); cx.setLineDash([]);
+    // Badge arriba
+    const badge = document.createElement('span');
+    badge.style.cssText = `background:${col};color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap`;
+    badge.textContent = `$${leg.strike} ${isLong?'BUY':'SELL'} ${leg.type.toUpperCase()}`;
+    badgesEl.appendChild(badge);
   });
 
   // Precio actual
-  const currentIdx = prices.findIndex(pr => Math.abs(pr - p.S) <= (maxP-minP)/prices.length*2);
-  if (currentIdx >= 0) {
-    annotations['current'] = {
-      type: 'line',
-      xMin: currentIdx, xMax: currentIdx,
-      borderColor: '#ffd700',
-      borderWidth: 2,
-      borderDash: [6,3],
-      label: {
-        display: true,
-        content: '▼ $'+p.S.toFixed(0),
-        position: 'start',
-        backgroundColor: '#ffd700',
-        color: '#000',
-        font: { size: 9, weight: 'bold' },
-        padding: { x:5, y:3 },
-        borderRadius: 4,
-      }
-    };
+  const curSi = prices.findIndex(pr => Math.abs(pr-p.S) <= (maxP-minP)/prices.length*3);
+  if (curSi >= 0) {
+    const x = xScale(curSi);
+    cx.beginPath();
+    cx.strokeStyle = '#ffd700';
+    cx.lineWidth = 2;
+    cx.setLineDash([6,3]);
+    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
+    cx.stroke(); cx.setLineDash([]);
+    // Badge precio
+    cx.fillStyle = '#ffd700';
+    cx.font = 'bold 10px Arial';
+    cx.textAlign = 'center';
+    const lbl = '▲ $'+p.S.toFixed(0);
+    const tw = cx.measureText(lbl).width + 10;
+    cx.fillRect(x-tw/2, mt+2, tw, 16);
+    cx.fillStyle = '#000';
+    cx.fillText(lbl, x, mt+13);
   }
 
-  // Breakeven lines
-  breakevens.forEach((be, i) => {
-    const beIdx = prices.findIndex(pr => Math.abs(pr - be) <= (maxP-minP)/prices.length*2);
-    if (beIdx >= 0) {
-      annotations['be'+i] = {
-        type: 'line',
-        xMin: beIdx, xMax: beIdx,
-        borderColor: '#fff',
-        borderWidth: 1,
-        borderDash: [3,3],
-        label: {
-          display: true,
-          content: 'BE $'+be,
-          position: 'end',
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          color: '#fff',
-          font: { size: 8 },
-          padding: { x:4, y:2 },
-          borderRadius: 3,
-        }
-      };
-    }
+  // Breakeven
+  breakevens.forEach(be => {
+    const bsi = prices.findIndex(pr => Math.abs(pr-be) <= (maxP-minP)/prices.length*3);
+    if (bsi < 0) return;
+    const x = xScale(bsi);
+    cx.beginPath();
+    cx.strokeStyle = 'rgba(255,255,255,0.5)';
+    cx.lineWidth = 1;
+    cx.setLineDash([3,3]);
+    cx.moveTo(x, mt); cx.lineTo(x, mt+ch);
+    cx.stroke(); cx.setLineDash([]);
+    cx.fillStyle = 'rgba(255,255,255,0.15)';
+    cx.font = '9px Arial'; cx.textAlign = 'center';
+    const bw = cx.measureText('BE $'+be).width + 8;
+    cx.fillRect(x-bw/2, mt+ch-18, bw, 14);
+    cx.fillStyle = '#fff';
+    cx.fillText('BE $'+be, x, mt+ch-7);
   });
 
-  if (plChart) plChart.destroy();
-  plChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: prices.map(pr => '$'+pr.toFixed(0)),
-      datasets: [
-        {
-          label: 'Ganancia',
-          data: plsPos,
-          borderColor: '#26a69a',
-          backgroundColor: 'rgba(38,166,154,0.25)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        },
-        {
-          label: 'Pérdida',
-          data: plsNeg,
-          borderColor: '#ef5350',
-          backgroundColor: 'rgba(239,83,80,0.25)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const total = pls[ctx.dataIndex];
-              return ' P&L: $' + total.toFixed(2);
-            },
-            title: ctx => 'Precio: ' + ctx[0].label,
-          }
-        },
-        annotation: { annotations }
-      },
-      scales: {
-        x: {
-          ticks: { color:'#555', maxTicksLimit:12, maxRotation:0, font:{size:10} },
-          grid: { color:'rgba(255,255,255,0.05)' }
-        },
-        y: {
-          ticks: { color:'#888', callback: v => '$'+v.toFixed(0), font:{size:10} },
-          grid: { color:'rgba(255,255,255,0.05)' }
-        }
-      },
-      animation: { duration: 300 }
-    }
+  // Eje X — etiquetas de precio
+  cx.fillStyle = '#555'; cx.font = '10px Arial'; cx.textAlign = 'center';
+  const step2 = Math.max(1, Math.floor(prices.length/10));
+  prices.forEach((pr, i) => {
+    if (i % step2 !== 0) return;
+    cx.fillText('$'+pr.toFixed(0), xScale(i), mt+ch+20);
   });
+
+  // Tooltip on mousemove
+  canvas.onmousemove = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left);
+    const idx = Math.round((mx - ml) / cw * (pls.length-1));
+    if (idx < 0 || idx >= pls.length) return;
+    document.getElementById('currentPriceLabel').textContent =
+      'Precio: $'+prices[idx].toFixed(2)+' | P&L: $'+pls[idx].toFixed(2);
+  };
+
+  // ── GREEKS
 
   // Greeks
+
   let totDelta=0, totGamma=0, totTheta=0, totVega=0, totRho=0;
   legs.forEach(leg => {
     if (leg.type === 'stock') {
