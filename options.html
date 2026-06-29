@@ -741,137 +741,88 @@ function changeStrike(i, delta) {
 let isDraggingStrike = false;
 
 function renderRuler() {
-  const canvas = document.getElementById('strikeRuler');
+  const ruler = document.getElementById('strikeRuler');
   const labels = document.getElementById('rulerLabels');
-  if (!canvas) return;
+  if (!ruler) return;
   const p = getParams();
   const S = p.S;
-  const range = S * 0.25;
-  const minS = Math.floor(S - range);
-  const maxS = Math.ceil(S + range);
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.clientWidth || 260;
-  const H = 60;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  const cx = canvas.getContext('2d');
-  cx.scale(dpr, dpr);
-  const toX = v => ((v - minS) / (maxS - minS)) * W;
-  canvas._hitboxes = []; // Reiniciar hitboxes siempre
+  const minS = Math.floor(S * 0.75);
+  const maxS = Math.ceil(S * 1.25);
+  const toPct = v => Math.max(0, Math.min(100, ((v - minS) / (maxS - minS)) * 100));
 
-  // Fondo
-  cx.fillStyle = '#0d1117';
-  cx.fillRect(0, 0, W, H);
+  let html = '';
 
   // Línea base
-  cx.strokeStyle = '#30363d';
-  cx.lineWidth = 1;
-  cx.beginPath(); cx.moveTo(0, H/2); cx.lineTo(W, H/2); cx.stroke();
+  html += `<div style="position:absolute;top:32px;left:0;right:0;height:1px;background:#30363d"></div>`;
 
   // Precio actual
-  const sx = toX(S);
-  cx.strokeStyle = '#ffd70060';
-  cx.lineWidth = 1;
-  cx.setLineDash([3,3]);
-  cx.beginPath(); cx.moveTo(sx, 0); cx.lineTo(sx, H); cx.stroke();
-  cx.setLineDash([]);
-  cx.fillStyle = '#ffd700';
-  cx.font = 'bold 9px Arial';
-  cx.textAlign = 'center';
-  cx.fillText('▼ $'+S.toFixed(0), sx, 12);
+  const sp = toPct(S);
+  html += `<div style="position:absolute;top:0;left:${sp}%;transform:translateX(-50%);font-size:9px;color:#ffd700;font-weight:700;white-space:nowrap;pointer-events:none">▼ $${S.toFixed(0)}</div>`;
+  html += `<div style="position:absolute;top:0;bottom:0;left:${sp}%;width:1px;background:#ffd70040;pointer-events:none"></div>`;
 
-  // Strikes
+  // Badges de strikes
   legs.forEach((leg, i) => {
     if (leg.type === 'stock') return;
     const col = getLegColor(leg);
-    const x = toX(leg.strike);
-    // Línea vertical
-    cx.strokeStyle = col + '80';
-    cx.lineWidth = 1.5;
-    cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke();
-    // Badge
-    const lbl = '$'+leg.strike+' '+(leg.pos==='long'?'B':'S')+(leg.type==='call'?'C':'P');
-    cx.font = 'bold 10px Arial';
-    const tw = cx.measureText(lbl).width + 12;
-    let bx = Math.max(2, Math.min(W-tw-2, x - tw/2));
-    const by = 32;
-    // Fondo badge
-    cx.fillStyle = col;
-    cx.beginPath();
-    cx.roundRect(bx, by, tw, 20, 4);
-    cx.fill();
-    // Texto
-    cx.fillStyle = '#fff';
-    cx.textAlign = 'left';
-    cx.fillText(lbl, bx+6, by+14);
-    // Guardar hitbox en CSS pixels (no DPR) para que coincida con el mouse
-    canvas._hitboxes[i] = { x:bx, y:by, w:tw, h:20, legIdx:i };
+    const pct = toPct(leg.strike);
+    const lbl = `$${leg.strike} ${leg.pos==='long'?'BUY':'SELL'} ${leg.type.toUpperCase()}`;
+    html += `
+      <div data-leg="${i}"
+        style="position:absolute;left:calc(${pct}% - 30px);top:36px;background:${col};color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:grab;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.6);z-index:10;touch-action:none"
+        onmousedown="rulerDragStart(event,${i})">
+        ${lbl}
+      </div>
+      <div style="position:absolute;top:0;bottom:0;left:${pct}%;width:1px;background:${col}60;pointer-events:none"></div>`;
   });
 
-  // Labels eje
-  const steps = 5;
-  const stepSize = (maxS - minS) / steps;
-  if (labels) labels.innerHTML = Array.from({length:steps+1},(_,j)=>`<span>$${(minS+stepSize*j).toFixed(0)}</span>`).join('');
+  ruler.innerHTML = html;
 
-  // Eventos de drag — reinicializar siempre para tener hitboxes frescos
-  canvas.onmousedown = function(e) {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left);
-    const my = (e.clientY - rect.top);
-    // Escalar coordenadas según DPR
-    const dpr = window.devicePixelRatio || 1;
-    const scaleX = rect.width / (canvas.width / dpr);
-    const scaleY = rect.height / (canvas.height / dpr);
-    const hitboxes = canvas._hitboxes || [];
-    let activeLegIdx = -1;
-    for (let h of hitboxes) {
-      if (!h) continue;
-      // Comparar en coordenadas CSS (sin DPR)
-      if (mx >= h.x && mx <= h.x+h.w && my >= h.y && my <= h.y+h.h) {
-        activeLegIdx = h.legIdx;
-        isDraggingStrike = true;
-        canvas.style.cursor = 'grabbing';
-        break;
-      }
-    }
-    if (activeLegIdx < 0) return;
-
-    function onMove(ev) {
-      const rect2 = canvas.getBoundingClientRect();
-      const p2 = getParams();
-      const minS2 = p2.S * 0.75, maxS2 = p2.S * 1.25;
-      const pct = Math.max(0, Math.min(1, (ev.clientX - rect2.left) / rect2.width));
-      const ns = Math.round(minS2 + pct * (maxS2 - minS2));
-      if (ns !== legs[activeLegIdx].strike) {
-        legs[activeLegIdx].strike = Math.max(1, ns);
-        updateLegPremium(activeLegIdx);
-      }
-    }
-    function onUp() {
-      isDraggingStrike = false;
-      activeLegIdx = -1;
-      canvas.style.cursor = 'grab';
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  };
-
-  // Cursor hover sobre badges
-  canvas.onmousemove = function(e) {
-    if (isDraggingStrike) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const hitboxes = canvas._hitboxes || [];
-    const over = hitboxes.some(h => h && mx>=h.x && mx<=h.x+h.w && my>=h.y && my<=h.y+h.h);
-    canvas.style.cursor = over ? 'grab' : 'default';
-  };
+  // Labels
+  if (labels) {
+    const steps = 5;
+    labels.innerHTML = Array.from({length:steps+1},(_,j)=>{
+      const v = minS + ((maxS-minS)/steps)*j;
+      return `<span>$${v.toFixed(0)}</span>`;
+    }).join('');
+  }
 }
+
+function rulerDragStart(e, legIdx) {
+  e.preventDefault();
+  e.stopPropagation();
+  const ruler = document.getElementById('strikeRuler');
+  const p = getParams();
+  const minS = p.S * 0.75;
+  const maxS = p.S * 1.25;
+  isDraggingStrike = true;
+  const badge = e.currentTarget;
+  badge.style.cursor = 'grabbing';
+
+  function onMove(ev) {
+    const rect = ruler.getBoundingClientRect();
+    const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const ns = Math.round(minS + pct * (maxS - minS));
+    if (ns !== legs[legIdx].strike) {
+      legs[legIdx].strike = Math.max(1, ns);
+      updateLegPremium(legIdx);
+    }
+  }
+
+  function onUp() {
+    isDraggingStrike = false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchmove', onMove, {passive:false});
+  document.addEventListener('touchend', onUp);
+}
+
 
 function rulerHover(e) {}
 function rulerLeave() {}
