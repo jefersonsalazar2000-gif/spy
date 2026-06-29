@@ -225,20 +225,46 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
       <div class="chart-wrap" style="position:relative">
         <canvas id="plChart" style="display:block;width:100%;height:320px"></canvas>
       </div>
+      <!-- P&L en tiempo real -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 16px;margin-top:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div>
+            <div style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">P&L ACTUAL (al precio de hoy)</div>
+            <div id="currentPL" style="font-size:26px;font-weight:900;color:#888">$0.00</div>
+          </div>
+          <div style="width:1px;height:40px;background:#30363d"></div>
+          <div>
+            <div style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">RETORNO</div>
+            <div id="currentReturn" style="font-size:18px;font-weight:700;color:#888">0.0%</div>
+          </div>
+          <div style="width:1px;height:40px;background:#30363d"></div>
+          <div>
+            <div style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">DÍAS PASADOS</div>
+            <div id="daysPassed" style="font-size:18px;font-weight:700;color:#e0e0e0">0d</div>
+          </div>
+          <div style="width:1px;height:40px;background:#30363d"></div>
+          <div>
+            <div style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">DÍAS RESTANTES</div>
+            <div id="sliderDaysLeft" style="font-size:18px;font-weight:700;color:#ffd700">0d</div>
+          </div>
+        </div>
+        <div id="plStatusBadge" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;background:#21262d;color:#888">—</div>
+      </div>
+
       <!-- Slider de tiempo -->
       <div style="padding:12px 0 0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">FECHA</span>
-          <span style="font-size:12px;font-weight:700;color:#ffd700" id="sliderDateLabel">Al vencimiento</span>
-          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">DÍAS RESTANTES: <span id="sliderDaysLeft" style="color:#e0e0e0">0</span></span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">📅 HOY</span>
+          <span style="font-size:12px;font-weight:700;color:#ffd700" id="sliderDateLabel">Vencimiento</span>
+          <span style="font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.04em">VENCIMIENTO</span>
         </div>
         <input type="range" id="timeSlider" min="0" max="100" value="100"
-          style="width:100%;accent-color:#e84142;cursor:pointer;height:6px"
+          style="width:100%;accent-color:#e84142;cursor:pointer;height:8px;border-radius:4px"
           oninput="onSliderChange(this.value)">
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:3px">
-          <span>Hoy</span>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:4px">
+          <span>0 días</span>
           <span id="sliderMid"></span>
-          <span>Vencimiento</span>
+          <span id="sliderMaxDays"></span>
         </div>
       </div>
     </div>
@@ -736,11 +762,14 @@ function calculate() {
   const totalDays = p.days;
   document.getElementById('timeSlider').max = 100;
   document.getElementById('timeSlider').value = 100;
-  document.getElementById('sliderDaysLeft').textContent = totalDays;
-  document.getElementById('sliderDateLabel').textContent = 'Vencimiento';
+  document.getElementById('sliderDaysLeft').textContent = totalDays+'d';
+  document.getElementById('daysPassed').textContent = '0d';
+  document.getElementById('sliderDateLabel').textContent = '📅 Vencimiento';
+  document.getElementById('sliderMaxDays').textContent = totalDays+' días';
   const midDate = new Date(); midDate.setDate(midDate.getDate()+Math.round(totalDays/2));
   document.getElementById('sliderMid').textContent = midDate.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   currentSliderPct = 1.0;
+  onSliderChange(100); // inicializar P&L display
   drawChart(1.0);
   const canvas = document.getElementById('plChart'); // referencia para código siguiente
 
@@ -853,19 +882,68 @@ function onSliderChange(val) {
   currentSliderPct = val / 100;
   const p = getParams();
   const totalDays = p.days;
-  const daysLeft = Math.round(currentSliderPct * totalDays);
-  const daysGone = totalDays - daysLeft;
+  const daysLeft  = Math.round(currentSliderPct * totalDays);
+  const daysGone  = totalDays - daysLeft;
+  const isExpiry  = daysLeft === 0;
 
-  document.getElementById('sliderDaysLeft').textContent = daysLeft;
-  if (daysLeft === 0) {
-    document.getElementById('sliderDateLabel').textContent = 'Al vencimiento';
-  } else if (daysLeft === totalDays) {
-    document.getElementById('sliderDateLabel').textContent = 'Hoy';
+  // Actualizar labels
+  document.getElementById('sliderDaysLeft').textContent = daysLeft + 'd';
+  document.getElementById('daysPassed').textContent     = daysGone + 'd';
+
+  if (isExpiry) {
+    document.getElementById('sliderDateLabel').textContent = '📅 Vencimiento';
   } else {
     const d = new Date();
     d.setDate(d.getDate() + daysGone);
-    document.getElementById('sliderDateLabel').textContent = d.toLocaleDateString('es-ES', {day:'numeric',month:'short'}) + ' (' + daysGone + 'd)';
+    document.getElementById('sliderDateLabel').textContent = '📅 ' + d.toLocaleDateString('es-ES', {day:'numeric',month:'short',year:'numeric'});
   }
+
+  // Calcular P&L al precio actual con tiempo restante
+  const T_remaining = p.T * currentSliderPct;
+  let plAtCurrentPrice = 0;
+  legs.forEach(leg => {
+    if (leg.type === 'stock') {
+      const sign = leg.pos === 'long' ? 1 : -1;
+      plAtCurrentPrice += sign * (p.S - leg.strike) * leg.qty;
+      return;
+    }
+    let currentVal;
+    if (isExpiry || T_remaining <= 0) {
+      currentVal = leg.type === 'call' ? Math.max(0, p.S - leg.strike) : Math.max(0, leg.strike - p.S);
+    } else {
+      const bs = blackScholes(p.S, leg.strike, T_remaining, p.r, p.iv/100, p.q, leg.type);
+      currentVal = bs.price;
+    }
+    const sign = leg.pos === 'long' ? 1 : -1;
+    plAtCurrentPrice += sign * (currentVal - leg.premium) * leg.qty * 100;
+  });
+
+  // Mostrar P&L
+  const plEl     = document.getElementById('currentPL');
+  const retEl    = document.getElementById('currentReturn');
+  const badgeEl  = document.getElementById('plStatusBadge');
+  const netC     = netCostFn();
+  const retPct   = netC !== 0 ? (plAtCurrentPrice / Math.abs(netC) * 100) : 0;
+
+  plEl.textContent  = (plAtCurrentPrice >= 0 ? '+$' : '-$') + Math.abs(plAtCurrentPrice).toFixed(2);
+  plEl.style.color  = plAtCurrentPrice >= 0 ? '#26a69a' : '#ef5350';
+  retEl.textContent = (retPct >= 0 ? '+' : '') + retPct.toFixed(1) + '%';
+  retEl.style.color = retPct >= 0 ? '#26a69a' : '#ef5350';
+
+  if (plAtCurrentPrice > 50) {
+    badgeEl.textContent = '✅ EN GANANCIA';
+    badgeEl.style.background = '#1a3a1a';
+    badgeEl.style.color = '#26a69a';
+  } else if (plAtCurrentPrice < -50) {
+    badgeEl.textContent = '❌ EN PÉRDIDA';
+    badgeEl.style.background = '#3a1a1a';
+    badgeEl.style.color = '#ef5350';
+  } else {
+    badgeEl.textContent = '⚖️ BREAKEVEN';
+    badgeEl.style.background = '#2a2a1a';
+    badgeEl.style.color = '#ffd700';
+  }
+
   drawChart(currentSliderPct);
 }
 
