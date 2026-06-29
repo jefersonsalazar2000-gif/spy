@@ -759,6 +759,7 @@ function renderRuler() {
   const cx = canvas.getContext('2d');
   cx.scale(dpr, dpr);
   const toX = v => ((v - minS) / (maxS - minS)) * W;
+  canvas._hitboxes = []; // Reiniciar hitboxes siempre
 
   // Fondo
   cx.fillStyle = '#0d1117';
@@ -805,8 +806,7 @@ function renderRuler() {
     cx.fillStyle = '#fff';
     cx.textAlign = 'left';
     cx.fillText(lbl, bx+6, by+14);
-    // Guardar hitbox para drag
-    if (!canvas._hitboxes) canvas._hitboxes = [];
+    // Guardar hitbox en CSS pixels (no DPR) para que coincida con el mouse
     canvas._hitboxes[i] = { x:bx, y:by, w:tw, h:20, legIdx:i };
   });
 
@@ -819,13 +819,18 @@ function renderRuler() {
   canvas.onmousedown = function(e) {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width / (window.devicePixelRatio||1);
     const mx = (e.clientX - rect.left);
     const my = (e.clientY - rect.top);
+    // Escalar coordenadas según DPR
+    const dpr = window.devicePixelRatio || 1;
+    const scaleX = rect.width / (canvas.width / dpr);
+    const scaleY = rect.height / (canvas.height / dpr);
     const hitboxes = canvas._hitboxes || [];
     let activeLegIdx = -1;
     for (let h of hitboxes) {
-      if (h && mx >= h.x && mx <= h.x+h.w && my >= h.y && my <= h.y+h.h) {
+      if (!h) continue;
+      // Comparar en coordenadas CSS (sin DPR)
+      if (mx >= h.x && mx <= h.x+h.w && my >= h.y && my <= h.y+h.h) {
         activeLegIdx = h.legIdx;
         isDraggingStrike = true;
         canvas.style.cursor = 'grabbing';
