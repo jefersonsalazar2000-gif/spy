@@ -286,7 +286,7 @@ input[type=range]{width:100%;accent-color:#e84142;cursor:pointer}
         </div>
         <input type="range" id="timeSlider" min="0" max="100" value="100"
           style="width:100%;accent-color:#e84142;cursor:pointer;height:8px;border-radius:4px"
-          oninput="if(!isDraggingStrike)onSliderChange(this.value)">
+          oninput="onSliderChange(this.value)">
         <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:4px">
           <span>0 días</span>
           <span id="sliderMid"></span>
@@ -729,7 +729,7 @@ function renderLegs() {
     </div>`;
   }).join('');
 
-  // Ruler visual
+  // Ruler canvas
   renderRuler();
 }
 
@@ -738,84 +738,135 @@ function changeStrike(i, delta) {
   updateLegPremium(i);
 }
 
+let isDraggingStrike = false;
+let rulerInitialized = false;
+
 function renderRuler() {
-  const ruler = document.getElementById('strikeRuler');
+  const canvas = document.getElementById('strikeRuler');
   const labels = document.getElementById('rulerLabels');
-  if (!ruler || !legs.length) return;
+  if (!canvas) return;
   const p = getParams();
   const S = p.S;
   const range = S * 0.25;
-  const minS  = Math.floor(S - range);
-  const maxS  = Math.ceil(S + range);
-  const W     = ruler.clientWidth || 260;
-
+  const minS = Math.floor(S - range);
+  const maxS = Math.ceil(S + range);
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth || 260;
+  const H = 60;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const cx = canvas.getContext('2d');
+  cx.scale(dpr, dpr);
   const toX = v => ((v - minS) / (maxS - minS)) * W;
 
-  let html = '';
+  // Fondo
+  cx.fillStyle = '#0d1117';
+  cx.fillRect(0, 0, W, H);
 
   // Línea base
-  html += `<div style="position:absolute;top:50%;left:0;right:0;height:1px;background:#30363d"></div>`;
+  cx.strokeStyle = '#30363d';
+  cx.lineWidth = 1;
+  cx.beginPath(); cx.moveTo(0, H/2); cx.lineTo(W, H/2); cx.stroke();
 
   // Precio actual
   const sx = toX(S);
-  html += `<div style="position:absolute;top:8px;left:${sx}px;transform:translateX(-50%);font-size:9px;color:#ffd700;font-weight:700;white-space:nowrap">▼ $${S.toFixed(0)}</div>`;
-  html += `<div style="position:absolute;top:0;bottom:0;left:${sx}px;width:1px;background:#ffd70060"></div>`;
+  cx.strokeStyle = '#ffd70060';
+  cx.lineWidth = 1;
+  cx.setLineDash([3,3]);
+  cx.beginPath(); cx.moveTo(sx, 0); cx.lineTo(sx, H); cx.stroke();
+  cx.setLineDash([]);
+  cx.fillStyle = '#ffd700';
+  cx.font = 'bold 9px Arial';
+  cx.textAlign = 'center';
+  cx.fillText('▼ $'+S.toFixed(0), sx, 12);
 
-  // Strikes de las piernas
+  // Strikes
   legs.forEach((leg, i) => {
     if (leg.type === 'stock') return;
     const col = getLegColor(leg);
-    const x   = toX(leg.strike);
-    const clamp = Math.max(0, Math.min(W-50, x-25));
-    html += `<div 
-      onmousedown="startDragStrike(event,${i})"
-      onclick="event.stopPropagation()"
-      style="position:absolute;left:${clamp}px;top:30px;background:${col};color:#fff;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:700;cursor:grab;white-space:nowrap;user-select:none;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.5)"
-      title="Arrastra para cambiar strike">
-      $${leg.strike} ${leg.pos==='long'?'B':'S'}${leg.type==='call'?'C':'P'}
-    </div>`;
-    html += `<div style="position:absolute;top:0;bottom:0;left:${x}px;width:1px;background:${col}80"></div>`;
+    const x = toX(leg.strike);
+    // Línea vertical
+    cx.strokeStyle = col + '80';
+    cx.lineWidth = 1.5;
+    cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke();
+    // Badge
+    const lbl = '$'+leg.strike+' '+(leg.pos==='long'?'B':'S')+(leg.type==='call'?'C':'P');
+    cx.font = 'bold 10px Arial';
+    const tw = cx.measureText(lbl).width + 12;
+    let bx = Math.max(2, Math.min(W-tw-2, x - tw/2));
+    const by = 32;
+    // Fondo badge
+    cx.fillStyle = col;
+    cx.beginPath();
+    cx.roundRect(bx, by, tw, 20, 4);
+    cx.fill();
+    // Texto
+    cx.fillStyle = '#fff';
+    cx.textAlign = 'left';
+    cx.fillText(lbl, bx+6, by+14);
+    // Guardar hitbox para drag
+    if (!canvas._hitboxes) canvas._hitboxes = [];
+    canvas._hitboxes[i] = { x:bx, y:by, w:tw, h:20, legIdx:i };
   });
 
-  // Labels del eje
-  ruler.innerHTML = html;
+  // Labels eje
   const steps = 5;
   const stepSize = (maxS - minS) / steps;
-  labels.innerHTML = Array.from({length:steps+1},(_,i)=>`<span>$${(minS+stepSize*i).toFixed(0)}</span>`).join('');
-}
+  if (labels) labels.innerHTML = Array.from({length:steps+1},(_,j)=>`<span>$${(minS+stepSize*j).toFixed(0)}</span>`).join('');
 
-let dragLegIdx = -1;
-let isDraggingStrike = false;
+  // Inicializar eventos solo una vez
+  if (!rulerInitialized) {
+    rulerInitialized = true;
+    let activeLegIdx = -1;
 
-function startDragStrike(e, i) {
-  e.stopPropagation();
-  e.preventDefault();
-  dragLegIdx = i;
-  isDraggingStrike = true;
-  const ruler = document.getElementById('strikeRuler');
-  const p = getParams();
-  const minS = p.S * 0.75, maxS = p.S * 1.25;
-  function onMove(ev) {
-    ev.stopPropagation();
-    const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-    const rect = ruler.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const ns = Math.round(minS + pct * (maxS - minS));
-    if (ns !== legs[i].strike) { legs[i].strike = Math.max(1, ns); updateLegPremium(i); }
+    canvas.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left);
+      const my = (e.clientY - rect.top);
+      // Verificar si clickeó un badge
+      const hitboxes = canvas._hitboxes || [];
+      for (let h of hitboxes) {
+        if (h && mx >= h.x && mx <= h.x+h.w && my >= h.y && my <= h.y+h.h) {
+          activeLegIdx = h.legIdx;
+          isDraggingStrike = true;
+          canvas.style.cursor = 'grabbing';
+          break;
+        }
+      }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDraggingStrike || activeLegIdx < 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = canvas.getBoundingClientRect();
+      const p2 = getParams();
+      const minS2 = p2.S * 0.75, maxS2 = p2.S * 1.25;
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const ns = Math.round(minS2 + pct * (maxS2 - minS2));
+      if (ns !== legs[activeLegIdx].strike) {
+        legs[activeLegIdx].strike = Math.max(1, ns);
+        updateLegPremium(activeLegIdx);
+      }
+    });
+
+    document.addEventListener('mouseup', function(e) {
+      if (isDraggingStrike) {
+        isDraggingStrike = false;
+        activeLegIdx = -1;
+        canvas.style.cursor = 'grab';
+      }
+    });
   }
-  function onUp(ev) {
-    ev.stopPropagation();
-    isDraggingStrike = false;
-    dragLegIdx = -1;
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  }
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
 }
 
 function rulerHover(e) {}
 function rulerLeave() {}
+function startDragStrike(e, i) {}
 
 function updateLegPremium(i) {
   const p = getParams();
